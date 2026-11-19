@@ -1,0 +1,499 @@
+{
+  "description": "Rule cases shared by test_rules.py and rules.test.mjs. Errors are the English texts as the server reports them (file key prefix included); counts are checked in the form only.",
+  "configurations": {
+    "field-work": {
+      "semantic_types": [
+        {
+          "id": "site-photo",
+          "label": "Site photo",
+          "definition": "A photograph taken at the study site."
+        },
+        {
+          "id": "field-notebook",
+          "label": "Field notebook",
+          "definition": "Notes written during fieldwork.",
+          "uri": "https://example.org/terms/field-notebook"
+        },
+        {
+          "id": "other",
+          "label": "Other",
+          "definition": "A file that none of the profile's types describe.",
+          "requires_description": true
+        }
+      ],
+      "profiles": [
+        {
+          "id": "field-survey",
+          "revision": "1",
+          "dataset_category": "Field survey",
+          "semantic_types": [
+            {
+              "id": "site-photo",
+              "filename_patterns": [
+                "*.jpg",
+                "*.png"
+              ],
+              "formats": [
+                "jpg",
+                "png",
+                "tiff"
+              ]
+            },
+            {
+              "id": "field-notebook",
+              "filename_patterns": [
+                "*notes*"
+              ]
+            },
+            {
+              "id": "other",
+              "filename_patterns": [
+                "*"
+              ]
+            }
+          ],
+          "requirements": [
+            {
+              "id": "photos",
+              "label": "Site photos",
+              "level": "required",
+              "min_files": 1,
+              "max_files": 50,
+              "semantic_types": [
+                "site-photo"
+              ],
+              "help": "Upload at least one photo of the site."
+            },
+            {
+              "id": "notes",
+              "label": "Field notes",
+              "level": "recommended",
+              "min_files": 1,
+              "semantic_types": [
+                "field-notebook"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "photo-only",
+          "revision": "1",
+          "dataset_category": "Photo collection",
+          "semantic_types": [
+            {
+              "id": "site-photo"
+            }
+          ],
+          "requirements": []
+        }
+      ]
+    },
+    "material": {
+      "semantic_types": [
+        {
+          "id": "site-photo",
+          "label": "Site photo",
+          "definition": "A photograph taken at the study site."
+        },
+        {
+          "id": "field-notebook",
+          "label": "Field notebook",
+          "definition": "Notes written during fieldwork.",
+          "uri": "https://example.org/terms/field-notebook"
+        },
+        {
+          "id": "other",
+          "label": "Other",
+          "definition": "A file that none of the profile's types describe.",
+          "requires_description": true
+        }
+      ],
+      "profiles": [
+        {
+          "id": "survey",
+          "revision": "1",
+          "dataset_category": "Survey",
+          "semantic_types": [
+            {
+              "id": "site-photo"
+            },
+            {
+              "id": "field-notebook"
+            }
+          ],
+          "requirements": [
+            {
+              "id": "material",
+              "label": "Field material",
+              "level": "required",
+              "min_files": 2,
+              "semantic_types": [
+                "site-photo",
+                "field-notebook"
+              ],
+              "help": "Add photos or notes."
+            },
+            {
+              "id": "notes",
+              "label": "Notes",
+              "level": "recommended",
+              "min_files": 1,
+              "max_files": 1,
+              "semantic_types": [
+                "field-notebook"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "empty": {
+      "semantic_types": [],
+      "profiles": []
+    }
+  },
+  "cases": [
+    {
+      "name": "conforming deposit",
+      "configuration": "field-work",
+      "profile": {
+        "id": "field-survey",
+        "revision": "1"
+      },
+      "annotations": [
+        {
+          "file_key": "site.jpg",
+          "semantic_types": [
+            "site-photo"
+          ]
+        },
+        {
+          "file_key": "day-notes.txt",
+          "semantic_types": [
+            "field-notebook"
+          ]
+        },
+        {
+          "file_key": "README.md",
+          "semantic_types": [
+            "other"
+          ],
+          "description": "How the survey was organised."
+        }
+      ],
+      "file_keys": [
+        "site.jpg",
+        "day-notes.txt",
+        "README.md"
+      ],
+      "errors": [],
+      "counts": {
+        "photos": 1,
+        "notes": 1
+      }
+    },
+    {
+      "name": "no profiles configured",
+      "configuration": "empty",
+      "profile": null,
+      "annotations": [],
+      "file_keys": [],
+      "errors": []
+    },
+    {
+      "name": "no profile selected",
+      "configuration": "field-work",
+      "profile": null,
+      "annotations": [
+        {
+          "file_key": "site.jpg",
+          "semantic_types": [
+            "site-photo"
+          ]
+        },
+        {
+          "file_key": "day-notes.txt",
+          "semantic_types": [
+            "field-notebook"
+          ]
+        },
+        {
+          "file_key": "README.md",
+          "semantic_types": [
+            "other"
+          ],
+          "description": "How the survey was organised."
+        }
+      ],
+      "file_keys": [
+        "site.jpg",
+        "day-notes.txt",
+        "README.md"
+      ],
+      "errors": [
+        "Select a deposition profile."
+      ]
+    },
+    {
+      "name": "outdated profile revision",
+      "configuration": "field-work",
+      "profile": {
+        "id": "field-survey",
+        "revision": "0"
+      },
+      "annotations": [
+        {
+          "file_key": "site.jpg",
+          "semantic_types": [
+            "site-photo"
+          ]
+        },
+        {
+          "file_key": "day-notes.txt",
+          "semantic_types": [
+            "field-notebook"
+          ]
+        },
+        {
+          "file_key": "README.md",
+          "semantic_types": [
+            "other"
+          ],
+          "description": "How the survey was organised."
+        }
+      ],
+      "file_keys": [
+        "site.jpg",
+        "day-notes.txt",
+        "README.md"
+      ],
+      "errors": [
+        "Field survey: the profile has changed since it was selected. Select it again and review the file meanings."
+      ]
+    },
+    {
+      "name": "annotations follow the inventory and the profile",
+      "configuration": "field-work",
+      "profile": {
+        "id": "field-survey",
+        "revision": "1"
+      },
+      "annotations": [
+        {
+          "file_key": "site.jpg",
+          "semantic_types": [
+            "site-photo"
+          ]
+        },
+        {
+          "file_key": "day-notes.txt",
+          "semantic_types": [
+            "field-notebook"
+          ]
+        },
+        {
+          "file_key": "README.md",
+          "semantic_types": [
+            "other"
+          ],
+          "description": "How the survey was organised."
+        },
+        {
+          "file_key": "deleted.jpg",
+          "semantic_types": [
+            "site-photo"
+          ]
+        },
+        {
+          "file_key": "site.jpg",
+          "semantic_types": [
+            "site-photo"
+          ]
+        },
+        {
+          "file_key": "drone.png",
+          "semantic_types": [
+            "site-photo",
+            "site-photo",
+            "drone-video"
+          ]
+        }
+      ],
+      "file_keys": [
+        "site.jpg",
+        "day-notes.txt",
+        "README.md",
+        "drone.png",
+        "unlabelled.csv"
+      ],
+      "errors": [
+        "deleted.jpg: this file is no longer in the deposit. Remove its annotation.",
+        "site.jpg: the file is annotated more than once. Keep one annotation.",
+        "drone.png: remove the repeated file meaning.",
+        "drone.png: drone-video is not a file meaning in the Field survey profile.",
+        "unlabelled.csv: select at least one file meaning."
+      ]
+    },
+    {
+      "name": "formats and descriptions",
+      "configuration": "field-work",
+      "profile": {
+        "id": "field-survey",
+        "revision": "1"
+      },
+      "annotations": [
+        {
+          "file_key": "site.JPG",
+          "semantic_types": [
+            "site-photo"
+          ]
+        },
+        {
+          "file_key": "site.pdf",
+          "semantic_types": [
+            "site-photo"
+          ]
+        },
+        {
+          "file_key": "README.md",
+          "semantic_types": [
+            "other"
+          ],
+          "description": "  "
+        },
+        {
+          "file_key": "day-notes.txt",
+          "semantic_types": [
+            "field-notebook"
+          ]
+        }
+      ],
+      "file_keys": [
+        "site.JPG",
+        "site.pdf",
+        "README.md",
+        "day-notes.txt"
+      ],
+      "errors": [
+        "README.md: Other needs a description of what the file is.",
+        "site.pdf: Site photo accepts jpg, png, tiff files."
+      ]
+    },
+    {
+      "name": "missing required files (singular minimum)",
+      "configuration": "field-work",
+      "profile": {
+        "id": "field-survey",
+        "revision": "1"
+      },
+      "annotations": [],
+      "file_keys": [],
+      "errors": [
+        "Site photos: 0 of at least 1 file. Upload at least one photo of the site."
+      ],
+      "counts": {
+        "photos": 0,
+        "notes": 0
+      }
+    },
+    {
+      "name": "a file with two types counts once for each requirement",
+      "configuration": "field-work",
+      "profile": {
+        "id": "field-survey",
+        "revision": "1"
+      },
+      "annotations": [
+        {
+          "file_key": "annotated.png",
+          "semantic_types": [
+            "site-photo",
+            "field-notebook"
+          ]
+        }
+      ],
+      "file_keys": [
+        "annotated.png"
+      ],
+      "errors": [],
+      "counts": {
+        "photos": 1,
+        "notes": 1
+      }
+    },
+    {
+      "name": "any listed type matches, each file counted once (plural minimum)",
+      "configuration": "material",
+      "profile": {
+        "id": "survey",
+        "revision": "1"
+      },
+      "annotations": [
+        {
+          "file_key": "annotated-photo.png",
+          "semantic_types": [
+            "site-photo",
+            "field-notebook"
+          ]
+        }
+      ],
+      "file_keys": [
+        "annotated-photo.png"
+      ],
+      "errors": [
+        "Field material: 1 of at least 2 files. Add photos or notes."
+      ],
+      "counts": {
+        "material": 1,
+        "notes": 1
+      }
+    },
+    {
+      "name": "exceeded maximum",
+      "configuration": "material",
+      "profile": {
+        "id": "survey",
+        "revision": "1"
+      },
+      "annotations": [
+        {
+          "file_key": "annotated-photo.png",
+          "semantic_types": [
+            "site-photo",
+            "field-notebook"
+          ]
+        },
+        {
+          "file_key": "notes.txt",
+          "semantic_types": [
+            "field-notebook"
+          ]
+        }
+      ],
+      "file_keys": [
+        "annotated-photo.png",
+        "notes.txt"
+      ],
+      "errors": [
+        "Notes: 2 of at most 1 file. Remove or reassign the extra files."
+      ],
+      "counts": {
+        "material": 2,
+        "notes": 2
+      }
+    },
+    {
+      "name": "empty deposit with a plural minimum",
+      "configuration": "material",
+      "profile": {
+        "id": "survey",
+        "revision": "1"
+      },
+      "annotations": [],
+      "file_keys": [],
+      "errors": [
+        "Field material: 0 of at least 2 files. Add photos or notes."
+      ]
+    }
+  ]
+}
