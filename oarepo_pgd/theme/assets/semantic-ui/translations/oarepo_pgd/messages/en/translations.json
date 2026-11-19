@@ -1,0 +1,8 @@
+{
+  "{{label}}: {{found}} of at least {{count}} file.": "{{label}}: {{found}} of at least {{count}} file.",
+  "{{label}}: {{found}} of at least {{count}} file._plural": "{{label}}: {{found}} of at least {{count}} files.",
+  "{{label}}: {{found}} of at most {{count}} file. Remove or reassign the extra files.": "{{label}}: {{found}} of at most {{count}} file. Remove or reassign the extra files.",
+  "{{label}}: {{found}} of at most {{count}} file. Remove or reassign the extra files._plural": "{{label}}: {{found}} of at most {{count}} files. Remove or reassign the extra files.",
+  "{{count}} distinct file matching": "{{count}} distinct file matching",
+  "{{count}} distinct file matching_plural": "{{count}} distinct files matching"
+}

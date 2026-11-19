@@ -1,0 +1,37 @@
+/*******************************
+            Theme
+*******************************/
+
+@type: "element";
+@element: "profile-guided";
+
+@import (multiple) "../../theme.config";
+
+/*
+  The publish button with its note. The note stays in the normal flow below
+  the button, so longer or translated texts wrap without covering anything.
+*/
+.profile-guided__publish {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.profile-guided__publish-note {
+  margin: 0.5em 0 0;
+  max-width: 22rem;
+  text-align: right;
+  color: @mutedTextColor;
+  font-size: @relativeSmall;
+}
+
+/*
+  Rows holding the button align their items to the top, so the taller publish
+  cell does not stretch the other action buttons.
+*/
+.ui.grid > .form-actions-row:has(> .profile-guided__publish) {
+  align-items: flex-start;
+}
+
+/* Lets a repository override these styles from its site theme. */
+.loadUIOverrides();

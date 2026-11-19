@@ -1,0 +1,26 @@
+// The plugin's own i18next instance, set up like those of the OARepo packages:
+// the language comes from the page's <html lang>, English is the fallback, and
+// keys are the English texts.
+import i18n from "i18next";
+import LanguageDetector from "i18next-browser-languagedetector";
+import { initReactI18next } from "react-i18next";
+import { translations } from "./messages";
+
+const i18next = i18n.createInstance();
+i18next
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    // Load the bundled catalogues synchronously, so the first t() calls are translated.
+    initImmediate: false,
+    fallbackLng: "en",
+    returnEmptyString: false,
+    resources: translations,
+    keySeparator: false,
+    nsSeparator: false,
+    // React escapes rendered text; escaping here too would show "&#x2F;" in file names.
+    interpolation: { escapeValue: false },
+    detection: { order: ["htmlTag"], caches: [] },
+  });
+
+export { i18next };

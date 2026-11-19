@@ -22,6 +22,9 @@ tests = ["pytest"]
 [project.entry-points."invenio_i18n.translations"]
 oarepo_pgd = "oarepo_pgd"
 
+[project.entry-points."invenio_assets.webpack"]
+oarepo_pgd = "oarepo_pgd.theme.webpack:theme"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
