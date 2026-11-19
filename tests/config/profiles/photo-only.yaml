@@ -1,0 +1,6 @@
+id: photo-only
+revision: "1"
+dataset_category: Photo collection
+semantic_types:
+  - id: site-photo
+requirements: []

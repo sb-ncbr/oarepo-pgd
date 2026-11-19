@@ -1,0 +1,24 @@
+id: field-survey
+revision: "1"
+dataset_category: Field survey
+semantic_types:
+  - id: site-photo
+    filename_patterns: ["*.jpg", "*.png"]
+    formats: [jpg, png, tiff]
+  - id: field-notebook
+    filename_patterns: ["*notes*"]
+  - id: other
+    filename_patterns: ["*"]
+requirements:
+  - id: photos
+    label: Site photos
+    level: required
+    min_files: 1
+    max_files: 50
+    semantic_types: [site-photo]
+    help: Upload at least one photo of the site.
+  - id: notes
+    label: Field notes
+    level: recommended
+    min_files: 1
+    semantic_types: [field-notebook]

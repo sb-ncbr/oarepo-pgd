@@ -1,0 +1,11 @@
+- id: site-photo
+  label: Site photo
+  definition: A photograph taken at the study site.
+- id: field-notebook
+  label: Field notebook
+  definition: Notes written during fieldwork.
+  uri: https://example.org/terms/field-notebook
+- id: other
+  label: Other
+  definition: A file that none of the profile's types describe.
+  requires_description: true
