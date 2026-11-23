@@ -62,7 +62,9 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
 
     Published and draft records can be filtered by their profile ("Dataset
     category") and by the semantic types of their files ("File types"). The
-    filters show the labels from the YAML configuration.
+    filters show the labels from the YAML configuration. A semantic type with
+    ``search_filter: false``, such as a catch-all ``other``, is left out of the
+    "File types" filter.
     """
     properties = deepcopy(PROPERTIES)
     properties["deposition_profile"]["properties"]["id"]["facet-def"] = {
@@ -77,6 +79,9 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
         "label": _("File types"),
         "value_labels": {semantic_type["id"]: semantic_type["label"] for semantic_type in configuration["semantic_types"]},
     }
+    hidden = [item["id"] for item in configuration["semantic_types"] if item.get("search_filter") is False]
+    if hidden:
+        properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]["exclude"] = hidden
     return properties
 
 

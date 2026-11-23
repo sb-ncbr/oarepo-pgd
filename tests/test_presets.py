@@ -70,3 +70,14 @@ def test_refuses_a_different_existing_definition():
     existing = {"Metadata": {"properties": {"file_annotations": {"type": "keyword"}}}}
     with pytest.raises(ValueError, match="'file_annotations' is already defined"):
         add_fields([existing], name="collision")
+
+
+def test_a_type_can_stay_out_of_the_file_types_filter():
+    configuration = load_configuration(TEST_CONFIG)
+    configuration["semantic_types"][0] = {**configuration["semantic_types"][0], "search_filter": False}
+    hidden = configuration["semantic_types"][0]["id"]
+    type_filter = model_properties(configuration)["file_annotations"]["items"]["properties"]["semantic_types"]["items"]
+    assert type_filter["facet-def"]["exclude"] == [hidden]
+    assert "exclude" not in model_properties(load_configuration(TEST_CONFIG))["file_annotations"]["items"][
+        "properties"
+    ]["semantic_types"]["items"]["facet-def"]

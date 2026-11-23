@@ -13,7 +13,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 1. Add the package:
 
    ```sh
-   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.2.0
+   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.2.1
    ```
 
 2. Enable it on a model, in `models/<model>/model.py`:
@@ -90,7 +90,7 @@ That is all for a repository with the standard deposit form. Labels, definitions
 ## What the plugin adds
 
 - Metadata fields `deposition_profile` and `file_annotations` on the model. A user who may not read a record's files does not see its `file_annotations`, which name and describe those files; the selected profile stays visible.
-- Two search filters on the search page and in the search API: **Dataset category** (`metadata.deposition_profile.id`, the selected profile) and **File types** (`metadata.file_annotations.semantic_types`, the types assigned to the record's files). They show the labels from the YAML and count records, so a record with three recordings counts once under its type. A repository without facet groups shows them with all other filters; a repository with facet groups lists them in a group with `AddFacetGroup`, by these names.
+- Two search filters on the search page and in the search API: **Dataset category** (`metadata.deposition_profile.id`, the selected profile) and **File types** (`metadata.file_annotations.semantic_types`, the types assigned to the record's files). They show the labels from the YAML and count records, so a record with three recordings counts once under its type. A semantic type with `search_filter: false` in its definition, such as a catch-all `other`, is left out of **File types**. A repository without facet groups shows them with all other filters; a repository with facet groups lists them in a group with `AddFacetGroup`, by these names.
 - A record-schema check: errors are reported on every draft save and block publication, including publication through publish requests and by API clients.
 - The model's configuration in the deposit form's form config, as `deposition_profiles`.
 - `GET /api/deposition-profiles?model=<model>` with the same configuration, for other software. `model` can be omitted while one model uses the plugin.

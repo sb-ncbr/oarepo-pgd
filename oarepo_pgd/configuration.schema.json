@@ -22,7 +22,8 @@
           "label": {"$ref": "#/$defs/text"},
           "definition": {"$ref": "#/$defs/text"},
           "uri": {"type": "string", "pattern": "^https?://"},
-          "requires_description": {"type": "boolean"}
+          "requires_description": {"type": "boolean"},
+          "search_filter": {"type": "boolean"}
         }
       }
     },
