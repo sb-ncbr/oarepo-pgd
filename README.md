@@ -85,7 +85,19 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 
 6. Run `./run.sh install` again, so the frontend is rebuilt with the plugin's components.
 
-That is all for a repository with the standard deposit form. Labels, definitions and help texts in the YAML are shown as written.
+That is all for a repository with the standard deposit form.
+
+Labels, definitions, profile names and help texts in the YAML are either a string, shown in every language, or a mapping of language codes to strings, shown in the reader's language with English as the fallback:
+
+```yaml
+- id: interview-transcript
+  label: {en: Interview transcript, cs: Přepis rozhovoru}
+  definition:
+    en: A written transcription of an interview session.
+    cs: Písemný přepis rozhovoru.
+```
+
+In the short form `{en: ..., cs: ...}`, quote a text that contains a comma, or write the mapping on separate lines as for `definition` above; otherwise YAML splits the text and the repository refuses to start, naming the file.
 
 ## What the plugin adds
 
@@ -93,7 +105,7 @@ That is all for a repository with the standard deposit form. Labels, definitions
 - Two search filters on the search page and in the search API: **Dataset category** (`metadata.deposition_profile.id`, the selected profile) and **File types** (`metadata.file_annotations.semantic_types`, the types assigned to the record's files). They show the labels from the YAML and count records, so a record with three recordings counts once under its type. A semantic type with `search_filter: false` in its definition, such as a catch-all `other`, is left out of **File types**. A repository without facet groups shows them with all other filters; a repository with facet groups lists them in a group with `AddFacetGroup`, by these names.
 - A record-schema check: errors are reported on every draft save and block publication, including publication through publish requests and by API clients.
 - The model's configuration in the deposit form's form config, as `deposition_profiles`.
-- `GET /api/deposition-profiles?model=<model>` with the same configuration, for other software. `model` can be omitted while one model uses the plugin.
+- `GET /api/deposition-profiles?model=<model>` with the same configuration, for other software, with texts in all their languages. `model` can be omitted while one model uses the plugin.
 - Profile controls in the deposit form's files section, and a publish button that stays disabled until the files are known to meet the profile.
 - English texts, ready for translation: form texts go through the plugin's i18next instance and server messages through gettext. Adding a language means adding two catalogues to the plugin: a `translations.json` in `theme/assets/semantic-ui/translations/oarepo_pgd/messages/<lang>/`, registered in that folder's `index.js`, and a `.po` file made from `translations/messages.pot`, compiled to `translations/<lang>/LC_MESSAGES/messages.mo`.
 

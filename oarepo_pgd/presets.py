@@ -28,6 +28,7 @@ from oarepo_model.presets import Preset
 from .config import ConfigurationError, load_configuration
 from .registry import NAMESPACE_KEY
 from .schema import profile_schema_mixin
+from .texts import ConfigurationLabels
 
 PROPERTIES = {
     "deposition_profile": {
@@ -62,7 +63,7 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
 
     Published and draft records can be filtered by their profile ("Dataset
     category") and by the semantic types of their files ("File types"). The
-    filters show the labels from the YAML configuration. A semantic type with
+    filters show the labels from the YAML configuration, in the reader's language. A semantic type with
     ``search_filter: false``, such as a catch-all ``other``, is left out of the
     "File types" filter.
     """
@@ -71,13 +72,17 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
         "facet": TERMS_FACET,
         "field": "metadata.deposition_profile.id",
         "label": _("Dataset category"),
-        "value_labels": {profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]},
+        "value_labels": ConfigurationLabels(
+            {profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]}
+        ),
     }
     properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"] = {
         "facet": TERMS_FACET,
         "field": "metadata.file_annotations.semantic_types",
         "label": _("File types"),
-        "value_labels": {semantic_type["id"]: semantic_type["label"] for semantic_type in configuration["semantic_types"]},
+        "value_labels": ConfigurationLabels(
+            {semantic_type["id"]: semantic_type["label"] for semantic_type in configuration["semantic_types"]}
+        ),
     }
     hidden = [item["id"] for item in configuration["semantic_types"] if item.get("search_filter") is False]
     if hidden:

@@ -8,8 +8,16 @@
       "pattern": "^[a-z0-9][a-z0-9_-]*$"
     },
     "text": {
-      "type": "string",
-      "minLength": 1
+      "description": "A string for every language, or a mapping of language codes to strings, such as {en: Interview transcript, cs: Přepis rozhovoru}.",
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {"pattern": "^[a-z]{2,3}$"},
+          "additionalProperties": {"type": "string", "minLength": 1}
+        }
+      ]
     },
     "semanticTypes": {
       "type": "array",

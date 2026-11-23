@@ -3,8 +3,8 @@
 Messages are translated with the request's locale. Their English texts must
 match the form's (``logic.mjs`` and its English catalogue); the shared cases in
 ``tests/cases/rules.json`` check both implementations against the same texts.
-Labels, profile names and help texts come from the repository's configuration
-and are used as written.
+Labels, profile names and help texts come from the repository's configuration,
+in the request's language where the configuration gives several.
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ from typing import Any
 
 from flask_babel import gettext as _
 from flask_babel import ngettext
+
+from .texts import localized_configuration
 
 
 def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configuration: Mapping[str, Any]) -> list[str]:
@@ -25,6 +27,7 @@ def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configu
     """
     if not configuration["profiles"]:
         return []
+    configuration = localized_configuration(configuration)
 
     selected = metadata.get("deposition_profile") or {}
     profile = next((item for item in configuration["profiles"] if item["id"] == selected.get("id")), None)

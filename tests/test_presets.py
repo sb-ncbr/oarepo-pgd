@@ -59,11 +59,11 @@ def test_search_filters_use_the_configured_labels():
     profile_filter = properties["deposition_profile"]["properties"]["id"]["facet-def"]
     type_filter = properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
     assert profile_filter["field"] == "metadata.deposition_profile.id"
-    assert profile_filter["value_labels"] == {
+    assert profile_filter["value_labels"].texts == {
         profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]
     }
     assert type_filter["field"] == "metadata.file_annotations.semantic_types"
-    assert type_filter["value_labels"] == {item["id"]: item["label"] for item in configuration["semantic_types"]}
+    assert type_filter["value_labels"].texts == {item["id"]: item["label"] for item in configuration["semantic_types"]}
 
 
 def test_refuses_a_different_existing_definition():

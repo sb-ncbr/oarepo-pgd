@@ -9,7 +9,8 @@ class, in ``ui/<model>/__init__.py``, after the entries already there::
     class DatasetsUIResourceConfig(RDMRecordsUIResourceConfig):
         components = [*RDMRecordsUIResourceConfig.components, DepositionProfilesComponent]
 
-The form then finds the configuration in its form config, as ``deposition_profiles``.
+The form then finds the configuration in its form config, as ``deposition_profiles``,
+with its texts in the page's language.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from flask import current_app
 from oarepo_ui.resources.components import UIResourceComponent
 
 from .registry import profile_models
+from .texts import localized_configuration
 
 FORM_CONFIG_KEY = "deposition_profiles"
 
@@ -31,4 +33,4 @@ class DepositionProfilesComponent(UIResourceComponent):
         """Add the configuration when the resource's model uses profile-guided deposition."""
         entry = profile_models(current_app).get(self.config.model_name)
         if entry:
-            form_config[FORM_CONFIG_KEY] = entry.configuration
+            form_config[FORM_CONFIG_KEY] = localized_configuration(entry.configuration)
