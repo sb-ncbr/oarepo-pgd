@@ -13,7 +13,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 1. Add the package:
 
    ```sh
-   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.2.1
+   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.3.0
    ```
 
 2. Enable it on a model, in `models/<model>/model.py`:
@@ -107,7 +107,7 @@ In the short form `{en: ..., cs: ...}`, quote a text that contains a comma, or w
 - The model's configuration in the deposit form's form config, as `deposition_profiles`.
 - `GET /api/deposition-profiles?model=<model>` with the same configuration, for other software, with texts in all their languages. `model` can be omitted while one model uses the plugin.
 - Profile controls in the deposit form's files section, and a publish button that stays disabled until the files are known to meet the profile.
-- English texts, ready for translation: form texts go through the plugin's i18next instance and server messages through gettext. Adding a language means adding two catalogues to the plugin: a `translations.json` in `theme/assets/semantic-ui/translations/oarepo_pgd/messages/<lang>/`, registered in that folder's `index.js`, and a `.po` file made from `translations/messages.pot`, compiled to `translations/<lang>/LC_MESSAGES/messages.mo`.
+- English and Czech texts: form texts go through the plugin's i18next instance and server messages through gettext. Adding another language means adding two catalogues to the plugin: a `translations.json` in `theme/assets/semantic-ui/translations/oarepo_pgd/messages/<lang>/`, registered in that folder's `index.js`, and a `.po` file made from `translations/messages.pot`, compiled to `translations/<lang>/LC_MESSAGES/messages.mo`.
 
 ## Deposit form: standard and custom
 

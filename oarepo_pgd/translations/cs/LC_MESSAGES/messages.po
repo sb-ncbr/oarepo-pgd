@@ -1,0 +1,80 @@
+# Czech translations for oarepo-pgd.
+# This file is distributed under the same license as the oarepo-pgd project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: oarepo-pgd 0.3.0\n"
+"Language: cs\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+msgid "Dataset category"
+msgstr "Kategorie datové sady"
+
+msgid "File types"
+msgstr "Typy souborů"
+
+msgid "Select a deposition profile."
+msgstr "Vyberte depoziční profil."
+
+#, python-format
+msgid ""
+"%(profile)s: the profile has changed since it was selected. Select it "
+"again and review the file meanings."
+msgstr ""
+"%(profile)s: profil se od svého výběru změnil. Vyberte ho znovu a "
+"zkontrolujte významy souborů."
+
+#, python-format
+msgid "%(key)s: this file is no longer in the deposit. Remove its annotation."
+msgstr "%(key)s: tento soubor už v depozitu není. Odeberte jeho anotaci."
+
+#, python-format
+msgid "%(key)s: the file is annotated more than once. Keep one annotation."
+msgstr "%(key)s: soubor má více anotací. Ponechte jen jednu."
+
+#, python-format
+msgid "%(key)s: select at least one file meaning."
+msgstr "%(key)s: vyberte alespoň jeden význam souboru."
+
+#, python-format
+msgid "%(key)s: remove the repeated file meaning."
+msgstr "%(key)s: odeberte opakovaný význam souboru."
+
+#, python-format
+msgid "%(key)s: %(label)s is not a file meaning in the %(profile)s profile."
+msgstr "%(key)s: %(label)s není význam souboru v profilu %(profile)s."
+
+#, python-format
+msgid "%(key)s: %(label)s accepts %(formats)s files."
+msgstr "%(key)s: %(label)s přijímá soubory %(formats)s."
+
+#, python-format
+msgid "%(key)s: %(label)s needs a description of what the file is."
+msgstr "%(key)s: %(label)s vyžaduje popis toho, co soubor obsahuje."
+
+#, python-format
+msgid "%(label)s: %(found)s of at least %(num)s file."
+msgid_plural "%(label)s: %(found)s of at least %(num)s files."
+msgstr[0] "%(label)s: %(found)s z alespoň %(num)s souboru."
+msgstr[1] "%(label)s: %(found)s z alespoň %(num)s souborů."
+msgstr[2] "%(label)s: %(found)s z alespoň %(num)s souborů."
+
+#, python-format
+msgid ""
+"%(label)s: %(found)s of at most %(num)s file. Remove or reassign the "
+"extra files."
+msgid_plural ""
+"%(label)s: %(found)s of at most %(num)s files. Remove or reassign the "
+"extra files."
+msgstr[0] ""
+"%(label)s: %(found)s z nejvýše %(num)s souboru. Odeberte nadbytečné "
+"soubory, nebo jim přiřaďte jiný význam."
+msgstr[1] ""
+"%(label)s: %(found)s z nejvýše %(num)s souborů. Odeberte nadbytečné "
+"soubory, nebo jim přiřaďte jiný význam."
+msgstr[2] ""
+"%(label)s: %(found)s z nejvýše %(num)s souborů. Odeberte nadbytečné "
+"soubory, nebo jim přiřaďte jiný význam."
