@@ -72,6 +72,8 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
         "facet": TERMS_FACET,
         "field": "metadata.deposition_profile.id",
         "label": _("Dataset category"),
+        # Show every profile; the search engine returns 10 values by default.
+        "size": max(len(configuration["profiles"]), 10),
         "value_labels": ConfigurationLabels(
             {profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]}
         ),
@@ -80,6 +82,7 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
         "facet": TERMS_FACET,
         "field": "metadata.file_annotations.semantic_types",
         "label": _("File types"),
+        "size": max(len(configuration["semantic_types"]), 10),
         "value_labels": ConfigurationLabels(
             {semantic_type["id"]: semantic_type["label"] for semantic_type in configuration["semantic_types"]}
         ),

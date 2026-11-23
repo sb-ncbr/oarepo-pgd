@@ -63,6 +63,8 @@ def test_search_filters_use_the_configured_labels():
         profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]
     }
     assert type_filter["field"] == "metadata.file_annotations.semantic_types"
+    assert type_filter["size"] >= len(configuration["semantic_types"])
+    assert profile_filter["size"] >= len(configuration["profiles"])
     assert type_filter["value_labels"].texts == {item["id"]: item["label"] for item in configuration["semantic_types"]}
 
 
