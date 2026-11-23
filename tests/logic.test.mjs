@@ -2,7 +2,7 @@
 // The rules themselves are tested against the shared cases in rules.test.mjs.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { countNotation, errorText, fileAlerts, suggestType } from "../oarepo_pgd/theme/assets/semantic-ui/js/oarepo_pgd/logic.mjs";
+import { countNotation, errorText, fileAlerts, requirementState, suggestType } from "../oarepo_pgd/theme/assets/semantic-ui/js/oarepo_pgd/logic.mjs";
 import { translator } from "./translator.mjs";
 
 const profile = {
@@ -26,6 +26,16 @@ test("count notation", () => {
   assert.equal(countNotation({ min_files: 1 }), "1+");
   assert.equal(countNotation({ min_files: 2, max_files: 2 }), "2");
   assert.equal(countNotation({ min_files: 1, max_files: 3 }), "1–3");
+});
+
+test("requirement state: only a required minimum or a maximum blocks", () => {
+  assert.equal(requirementState({ level: "required", min_files: 1 }, 0), "unmet");
+  assert.equal(requirementState({ level: "required", min_files: 1 }, 1), "met");
+  assert.equal(requirementState({ level: "recommended", min_files: 1 }, 0), "advised");
+  assert.equal(requirementState({ level: "recommended", min_files: 1 }, 1), "met");
+  assert.equal(requirementState({ level: "recommended", min_files: 1, max_files: 2 }, 3), "unmet");
+  assert.equal(requirementState({ level: "optional", min_files: 0 }, 0), "met");
+  assert.equal(requirementState({ level: "optional", min_files: 0, max_files: 1 }, 2), "unmet");
 });
 
 test("messages render through a catalogue with plurals and the help text", () => {

@@ -75,9 +75,12 @@ def test_reports_requirement_problems(tmp_path):
          "semantic_types": ["site-photo"]},
         {"id": "photos", "label": "Photos again", "level": "optional", "min_files": 1,
          "semantic_types": ["drone-video"]},
+        {"id": "notes", "label": "Notes", "level": "recommended", "min_files": 0,
+         "semantic_types": ["field-notebook"]},
     ]
     text = problems(write(tmp_path, profiles=[profile(requirements=requirements)]))
     assert "requirement 'photos' is defined more than once" in text
     assert "requirement 'photos' has max_files below min_files" in text
     assert "requirement 'photos' is optional, so min_files must be 0" in text
+    assert "requirement 'notes' is recommended, so min_files must be at least 1" in text
     assert "requirement 'photos' uses semantic type 'drone-video', which the profile does not permit" in text

@@ -29,6 +29,20 @@ export function countNotation({ min_files: minimum, max_files: maximum }) {
 }
 
 /**
+ * How a requirement stands with `count` matching files: "unmet" blocks
+ * publication (a required minimum not reached, or any maximum exceeded),
+ * "advised" is a recommended minimum not reached, which publication ignores,
+ * and "met" is everything else.
+ */
+export function requirementState(requirement, count) {
+  const { level, min_files: minimum, max_files: maximum } = requirement;
+  if (maximum != null && count > maximum) return "unmet";
+  if (count >= minimum) return "met";
+  if (level === "required") return "unmet";
+  return level === "recommended" ? "advised" : "met";
+}
+
+/**
  * Check annotations against the selected profile.
  *
  * Returns { errors, counts }. Each error is { key, message, params }: `key` is

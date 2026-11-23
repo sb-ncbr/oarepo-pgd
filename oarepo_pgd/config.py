@@ -97,6 +97,8 @@ def _check_references(
                     )
             if requirement["level"] == "optional" and requirement["min_files"] != 0:
                 problems.append(f"{source}: {name} is optional, so min_files must be 0")
+            if requirement["level"] == "recommended" and requirement["min_files"] == 0:
+                problems.append(f"{source}: {name} is recommended, so min_files must be at least 1")
             if requirement.get("max_files") is not None and requirement["max_files"] < requirement["min_files"]:
                 problems.append(f"{source}: {name} has max_files below min_files")
     return problems

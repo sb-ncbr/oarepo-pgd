@@ -13,7 +13,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 1. Add the package:
 
    ```sh
-   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.1.0
+   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.2.0
    ```
 
 2. Enable it on a model, in `models/<model>/model.py`:
@@ -50,6 +50,14 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
        semantic_types: [interview-transcript]
        help: Provide a written transcription of the interview.
    ```
+
+   A requirement's `level` says what a file count below `min_files` means:
+
+   - `required`: an error. The form marks the requirement red and publication is blocked.
+   - `recommended`: a notice. The form marks the requirement yellow and publication stays open. `min_files` must be at least 1.
+   - `optional`: nothing. `min_files` must be 0.
+
+   A count above `max_files` is an error at every level.
 
    The full format is in `oarepo_pgd/configuration.schema.json`. A mistake in a YAML file stops the repository at startup with a message naming the file. So does a missing configuration: an enabled preset needs at least one profile, so deposits are never silently left unchecked. The preset defines the `deposition_profile` and `file_annotations` fields itself; a model that already defines either differently is refused.
 
