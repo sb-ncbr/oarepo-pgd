@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from oarepo_pgd.config import ConfigurationError
-from oarepo_pgd.presets import PROPERTIES, pgd_preset
+from oarepo_pgd.config import ConfigurationError, load_configuration
+from oarepo_pgd.presets import PROPERTIES, model_properties, pgd_preset
 from oarepo_pgd.registry import NAMESPACE_KEY
 
 TEST_CONFIG = Path(__file__).parent / "config"
@@ -49,7 +49,21 @@ def test_keeps_the_configuration_on_the_model():
 
 def test_accepts_an_identical_existing_definition():
     existing = {"Metadata": {"properties": deepcopy(PROPERTIES)}}
-    assert add_fields([existing])[0]["Metadata"]["properties"] == PROPERTIES
+    expected = model_properties(load_configuration(TEST_CONFIG))
+    assert add_fields([existing])[0]["Metadata"]["properties"] == expected
+
+
+def test_search_filters_use_the_configured_labels():
+    configuration = load_configuration(TEST_CONFIG)
+    properties = add_fields([{"Metadata": {"properties": {}}}])[0]["Metadata"]["properties"]
+    profile_filter = properties["deposition_profile"]["properties"]["id"]["facet-def"]
+    type_filter = properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
+    assert profile_filter["field"] == "metadata.deposition_profile.id"
+    assert profile_filter["value_labels"] == {
+        profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]
+    }
+    assert type_filter["field"] == "metadata.file_annotations.semantic_types"
+    assert type_filter["value_labels"] == {item["id"]: item["label"] for item in configuration["semantic_types"]}
 
 
 def test_refuses_a_different_existing_definition():
