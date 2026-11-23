@@ -1,6 +1,6 @@
 # oarepo-pgd
 
-Profile-guided deposition for [CESNET Invenio](https://nrp-cz.github.io/docs/) (OARepo) repositories. Prototype.
+Profile-guided deposition for [CESNET Invenio](https://nrp-cz.github.io/docs/) (OARepo) repositories.
 
 A deposition profile says which files a dataset should contain. Depositors select a profile, upload files and confirm what each file is. The repository counts the files against the profile and blocks publication until the requirements are met.
 
@@ -13,7 +13,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 1. Add the package:
 
    ```sh
-   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.3.0
+   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.3.1
    ```
 
 2. Enable it on a model, in `models/<model>/model.py`:
@@ -141,8 +141,6 @@ OAREPO_PGD_UI_OVERRIDES = False
   ```
 
   Both must be inside the form's Formik, Redux and form-config context, as the standard sections are. Showing server errors for `metadata.deposition_profile` and `metadata.file_annotations` next to the files is then the form's own task.
-
-The plugin's tests cover the rules, annotation reconciliation, the form-config component and the registration of the overrides; they do not render the form. The standard form has been checked in a browser on a generated repository; the custom routes have not.
 
 ## Tests
 
