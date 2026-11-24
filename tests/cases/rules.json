@@ -327,7 +327,6 @@
         "unlabelled.csv"
       ],
       "errors": [
-        "deleted.jpg: this file is no longer in the deposit. Remove its annotation.",
         "site.jpg: the file is annotated more than once. Keep one annotation.",
         "drone.png: remove the repeated file meaning.",
         "drone.png: drone-video is not a file meaning in the Field survey profile.",

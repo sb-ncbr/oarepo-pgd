@@ -23,9 +23,9 @@ test("a deletion and a completed upload in one change give one consistent update
   assert.deepEqual(next, [manual, { file_key: "second.wav", semantic_types: ["interview-recording"] }]);
 });
 
-test("manual assignments and stale annotations from loading are kept", () => {
-  const stale = { file_key: "removed-elsewhere.wav", semantic_types: ["interview-recording"] };
-  const annotations = [manual, stale];
+test("manual assignments and annotations of files not in the draft are kept", () => {
+  const absent = { file_key: "not-imported-yet.wav", semantic_types: ["interview-recording"] };
+  const annotations = [manual, absent];
   assert.equal(reconcileAnnotations(annotations, { keys: ["interview.txt"], profile }), annotations);
 });
 

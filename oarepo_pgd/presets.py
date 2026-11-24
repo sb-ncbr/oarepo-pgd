@@ -7,8 +7,9 @@ Add the preset to the model's ``presets`` list::
     presets=[rdm_complete_preset, pgd_preset(__file__)],
 
 It reads the YAML configuration from ``config/`` next to the model module, adds
-the ``deposition_profile`` and ``file_annotations`` metadata fields, and makes
-the record schema check every draft against its selected profile. An invalid
+the ``deposition_profile`` and ``file_annotations`` metadata fields, makes
+the record schema check every draft against its selected profile, and publishes
+a record with the annotations of its own files only. An invalid
 configuration, a configuration without profiles, or a model that already
 defines either field differently stops the process at startup.
 """
@@ -22,12 +23,13 @@ from typing import Any
 
 from invenio_i18n import lazy_gettext as _
 from oarepo_model.api import FunctionalPreset
-from oarepo_model.customizations import AddDictionary, Customization, PrependMixin
+from oarepo_model.customizations import AddDictionary, AddToList, Customization, PrependMixin
 from oarepo_model.presets import Preset
 
 from .config import ConfigurationError, load_configuration
 from .registry import NAMESPACE_KEY
 from .schema import profile_schema_mixin
+from .services import PublishedFileAnnotationsComponent
 from .texts import ConfigurationLabels
 
 PROPERTIES = {
@@ -141,10 +143,11 @@ def pgd_preset(
         """Check drafts against the selected profile and keep the configuration on the model."""
 
         provides = (NAMESPACE_KEY,)
-        modifies = ("RecordSchema",)
+        modifies = ("RecordSchema", "record_service_components")
 
         def apply(self, builder: Any, model: Any, dependencies: Any) -> Iterator[Customization]:
             yield PrependMixin("RecordSchema", profile_schema_mixin(configuration))
+            yield AddToList("record_service_components", PublishedFileAnnotationsComponent)
             # Read back per app through OAREPO_MODELS; see registry.py.
             yield AddDictionary(
                 NAMESPACE_KEY, {"configuration": configuration, "application_id": application_id}

@@ -33,10 +33,6 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "%(key)s: this file is no longer in the deposit. Remove its annotation."
-msgstr ""
-
-#, python-format
 msgid "%(key)s: the file is annotated more than once. Keep one annotation."
 msgstr ""
 

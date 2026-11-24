@@ -23,7 +23,9 @@ export function ProfileFields({ record, uploader }) {
 
   // One owner for automatic annotation changes: drop annotations of files
   // deleted in this session and suggest meanings for new uploads, as one write.
-  // Annotations already stale when the draft was loaded stay, so they are flagged.
+  // Annotations of files the draft never had in this session stay; they apply
+  // once a file of that name arrives, for example when a new version imports
+  // the previous version's files.
   const seen = useRef(new Set());
   useEffect(() => {
     const deleted = [...seen.current].filter((key) => !present.has(key));

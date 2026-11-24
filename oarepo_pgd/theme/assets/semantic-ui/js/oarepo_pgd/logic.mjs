@@ -76,8 +76,9 @@ export function checkDeposit(configuration, metadata, fileKeys) {
   const annotations = new Map();
   for (const annotation of metadata?.file_annotations ?? []) {
     const key = annotation.file_key;
-    if (!inventory.has(key)) add(key, "this file is no longer in the deposit. Remove its annotation.");
-    else if (annotations.has(key)) add(key, "the file is annotated more than once. Keep one annotation.");
+    // An annotation of a file that is not there is ignored, as on the server.
+    if (!inventory.has(key)) continue;
+    if (annotations.has(key)) add(key, "the file is annotated more than once. Keep one annotation.");
     else annotations.set(key, annotation);
   }
 
@@ -143,8 +144,9 @@ export function errorText(error, t) {
  *
  * Removes the annotations of files deleted in this session and adds a
  * filename suggestion for each completed file that has no annotation yet.
- * Every other annotation, including manual assignments and stale annotations
- * present when the draft was loaded, is kept as it is. Returns `annotations`
+ * Every other annotation is kept as it is, including manual assignments and
+ * annotations of files the draft does not have, which apply once a file of
+ * that name is uploaded or imported. Returns `annotations`
  * itself when nothing changes, so the caller can skip the write.
  */
 export function reconcileAnnotations(annotations, { deleted = [], keys = [], profile = null }) {

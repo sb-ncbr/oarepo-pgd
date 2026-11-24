@@ -23,7 +23,8 @@ def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configu
 
     ``file_keys`` is the repository's current file inventory. Requirement matches
     are derived from the annotated semantic types; each distinct file counts once
-    per matching requirement.
+    per matching requirement. An annotation whose file is not in the inventory
+    is ignored.
     """
     if not configuration["profiles"]:
         return []
@@ -51,8 +52,9 @@ def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configu
     for annotation in metadata.get("file_annotations") or []:
         key = annotation.get("file_key")
         if key not in inventory:
-            errors.append(_("%(key)s: this file is no longer in the deposit. Remove its annotation.", key=key))
-        elif key in annotations:
+            # Not an error: the file may be uploaded later; see annotations_of_files.
+            continue
+        if key in annotations:
             errors.append(_("%(key)s: the file is annotated more than once. Keep one annotation.", key=key))
         else:
             annotations[key] = annotation
@@ -101,3 +103,16 @@ def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configu
                 maximum, label=label, found=found,
             ))
     return errors
+
+
+def annotations_of_files(annotations: Iterable[Mapping[str, Any]], file_keys: Iterable[str]) -> list[Mapping[str, Any]]:
+    """Return the annotations whose file is in the inventory, in their order.
+
+    A draft may hold annotations of files it does not have: a client can save
+    the annotations before uploading the files, and a draft of a new version
+    starts with the previous version's annotations and no files. They take
+    effect once a file of that name is there. A published record keeps only
+    the annotations of its own files.
+    """
+    inventory = set(file_keys)
+    return [annotation for annotation in annotations if annotation.get("file_key") in inventory]

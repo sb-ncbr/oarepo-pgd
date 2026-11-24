@@ -7,7 +7,7 @@ import { fileAlerts, messageText } from "./logic.mjs";
 const t = (message, params) => i18next.t(message, params);
 const sentence = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
-/** One row per uploaded file to describe it and assign its meanings, and the annotations left without a file. */
+/** One row per uploaded file to describe it and assign its meanings. */
 export function FileAssignments({ configuration, profile, types, keys, annotations, errors, setAnnotations }) {
   const permitted = new Set(profile.semantic_types.map((type) => type.id));
 
@@ -86,15 +86,6 @@ export function FileAssignments({ configuration, profile, types, keys, annotatio
           </Table.Body>
         </Table>
       )}
-      {annotations.filter((item) => !keys.includes(item.file_key)).map((item) => (
-        <Message key={item.file_key} negative role="alert">
-          {t("{{file}} is no longer among the uploaded files.", { file: item.file_key })}{" "}
-          <Button type="button" size="small" compact
-            onClick={() => setAnnotations(annotations.filter((other) => other.file_key !== item.file_key))}>
-            {t("Remove stale annotation")}
-          </Button>
-        </Message>
-      ))}
     </>
   );
 }

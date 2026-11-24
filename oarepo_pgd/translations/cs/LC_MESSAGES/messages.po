@@ -28,10 +28,6 @@ msgstr ""
 "zkontrolujte významy souborů."
 
 #, python-format
-msgid "%(key)s: this file is no longer in the deposit. Remove its annotation."
-msgstr "%(key)s: tento soubor už v depozitu není. Odeberte jeho anotaci."
-
-#, python-format
 msgid "%(key)s: the file is annotated more than once. Keep one annotation."
 msgstr "%(key)s: soubor má více anotací. Ponechte jen jednu."
 

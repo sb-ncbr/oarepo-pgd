@@ -13,7 +13,6 @@
   "File-count requirement satisfied": "Požadovaný počet souborů je splněn",
   "File counts update automatically from the meanings you select.": "Počty souborů se aktualizují podle významů, které vyberete.",
   "{{file}} description": "Popis souboru {{file}}",
-  "{{file}} is no longer among the uploaded files.": "Soubor {{file}} už mezi nahranými soubory není.",
   "File requirements": "Požadavky na soubory",
   "Files": "Soubory",
   "Files and meanings": "Soubory a jejich významy",
@@ -35,7 +34,6 @@
   "{{profile}}: the profile has changed since it was selected. Select it again and review the file meanings.": "{{profile}}: profil se od svého výběru změnil. Vyberte ho znovu a zkontrolujte významy souborů.",
   "Recommended": "Doporučeno",
   "Recommended files are missing": "Chybí doporučené soubory",
-  "Remove stale annotation": "Odebrat zastaralou anotaci",
   "remove the repeated file meaning.": "odeberte opakovaný význam souboru.",
   "Remove unknown type: {{type}}": "Odebrat neznámý typ: {{type}}",
   "Review the suggested meanings for each file and change them if needed.": "Zkontrolujte navržené významy jednotlivých souborů a v případě potřeby je změňte.",
@@ -48,6 +46,5 @@
   "the file is annotated more than once. Keep one annotation.": "soubor má více anotací. Ponechte jen jednu.",
   "The file requirements cannot be checked, so the deposit cannot be published.": "Požadavky na soubory nelze zkontrolovat, takže depozit nelze publikovat.",
   "This draft uses a profile version that is no longer available. Select a profile and review the file meanings.": "Tento koncept používá verzi profilu, která už není k dispozici. Vyberte profil a zkontrolujte významy souborů.",
-  "this file is no longer in the deposit. Remove its annotation.": "tento soubor už v depozitu není. Odeberte jeho anotaci.",
   "Upload files": "Nahrát soubory"
 }
