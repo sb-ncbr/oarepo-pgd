@@ -27,6 +27,7 @@ from oarepo_model.customizations import AddDictionary, AddToList, Customization,
 from oarepo_model.presets import Preset
 
 from .config import ConfigurationError, load_configuration
+from .profiles import Configuration
 from .registry import NAMESPACE_KEY
 from .schema import profile_schema_mixin
 from .services import PublishedFileAnnotationsComponent
@@ -63,7 +64,7 @@ PROPERTIES = {
 TERMS_FACET = "invenio_records_resources.services.records.facets.TermsFacet"
 
 
-def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
+def model_properties(configuration: Configuration) -> dict[str, Any]:
     """Return the metadata fields with search filters labelled from the configuration.
 
     Published and draft records can be filtered by their profile ("Dataset
@@ -78,21 +79,17 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
         "field": "metadata.pgd_deposition_profile.id",
         "label": _("Dataset category"),
         # Show every profile; the search engine returns 10 values by default.
-        "size": max(len(configuration["profiles"]), 10),
-        "value_labels": ConfigurationLabels(
-            {profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]}
-        ),
+        "size": max(len(configuration.profiles), 10),
+        "value_labels": ConfigurationLabels({item.id: item.dataset_category for item in configuration.profiles}),
     }
     properties["pgd_file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"] = {
         "facet": TERMS_FACET,
         "field": "metadata.pgd_file_annotations.semantic_types",
         "label": _("File types"),
-        "size": max(len(configuration["semantic_types"]), 10),
-        "value_labels": ConfigurationLabels(
-            {semantic_type["id"]: semantic_type["label"] for semantic_type in configuration["semantic_types"]}
-        ),
+        "size": max(len(configuration.semantic_types), 10),
+        "value_labels": ConfigurationLabels({item.id: item.label for item in configuration.semantic_types}),
     }
-    hidden = [item["id"] for item in configuration["semantic_types"] if item.get("search_filter") is False]
+    hidden = [item.id for item in configuration.semantic_types if not item.search_filter]
     if hidden:
         type_filter = properties["pgd_file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
         type_filter["exclude"] = hidden
@@ -114,7 +111,7 @@ def pgd_preset(
     configuration = load_configuration(config_directory)
     # An enabled preset without profiles would leave deposits unchecked, so a
     # misplaced configuration must stop the repository instead.
-    if not configuration["profiles"]:
+    if not configuration.profiles:
         raise ConfigurationError(
             f"No deposition profiles found: expected profile files in {config_directory / 'profiles'} "
             f"and semantic types in {config_directory / 'semantic-types'}."

@@ -8,10 +8,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from flask import Flask
+
+    from .profiles import Configuration
 
 NAMESPACE_KEY = "DepositionProfiles"
 
@@ -20,7 +22,7 @@ NAMESPACE_KEY = "DepositionProfiles"
 class ModelProfiles:
     """One model's deposition configuration and the names of its UI."""
 
-    configuration: dict[str, Any]
+    configuration: Configuration
     ui_blueprint: str | None
     application_id: str
 

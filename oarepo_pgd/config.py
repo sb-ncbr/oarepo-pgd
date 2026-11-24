@@ -13,15 +13,16 @@ from typing import Any
 import yaml
 from marshmallow import ValidationError, fields
 
-from .config_schema import PROFILE, SEMANTIC_TYPES, problems
+from .config_schema import PROFILE, SEMANTIC_TYPES, ConfigurationSchema, problems
+from .profiles import Configuration, Profile, SemanticType
 
 
 class ConfigurationError(Exception):
     """The deposition configuration is invalid; the message lists every problem."""
 
 
-def load_configuration(directory: str | Path) -> dict[str, list[dict[str, Any]]]:
-    """Return ``{"semantic_types": [...], "profiles": [...]}`` or raise ConfigurationError."""
+def load_configuration(directory: str | Path) -> Configuration:
+    """Return the configuration read from ``directory`` or raise ConfigurationError."""
     directory = Path(directory)
     found: list[str] = []
     semantic_types = [
@@ -34,10 +35,27 @@ def load_configuration(directory: str | Path) -> dict[str, list[dict[str, Any]]]
         found = _check_references(semantic_types, profiles)
     if found:
         raise ConfigurationError("Invalid deposition configuration:\n" + "\n".join(f"  {p}" for p in found))
-    return {
-        "semantic_types": [item for _, item in semantic_types],
-        "profiles": [profile for _, profile in profiles],
-    }
+    return Configuration(
+        semantic_types=tuple(item for _, item in semantic_types),
+        profiles=tuple(profile for _, profile in profiles),
+    )
+
+
+def parse_configuration(data: dict[str, Any]) -> Configuration:
+    """Return the configuration given as plain data, such as parsed JSON, or raise ConfigurationError."""
+    try:
+        loaded = ConfigurationSchema().load(data)
+    except ValidationError as error:
+        raise ConfigurationError("Invalid deposition configuration:\n  " + "\n  ".join(problems(error))) from error
+    semantic_types = [("semantic_types", item) for item in loaded["semantic_types"]]
+    profiles = [("profiles", profile) for profile in loaded["profiles"]]
+    found = _check_references(semantic_types, profiles)
+    if found:
+        raise ConfigurationError("Invalid deposition configuration:\n" + "\n".join(f"  {p}" for p in found))
+    return Configuration(
+        semantic_types=tuple(item for _, item in semantic_types),
+        profiles=tuple(profile for _, profile in profiles),
+    )
 
 
 def _read_files(directory: Path, folder: str, content: fields.Field, found: list[str]) -> list[tuple[str, Any]]:
@@ -59,45 +77,42 @@ def _read_files(directory: Path, folder: str, content: fields.Field, found: list
     return results
 
 
-def _check_references(
-    semantic_types: list[tuple[str, dict[str, Any]]], profiles: list[tuple[str, dict[str, Any]]]
-) -> list[str]:
+def _check_references(semantic_types: list[tuple[str, SemanticType]], profiles: list[tuple[str, Profile]]) -> list[str]:
     problems = []
-    defined = {}
+    defined: dict[str, str] = {}
     for source, item in semantic_types:
-        if item["id"] in defined:
-            problems.append(f"{source}: semantic type '{item['id']}' is already defined in {defined[item['id']]}")
-        defined.setdefault(item["id"], source)
+        if item.id in defined:
+            problems.append(f"{source}: semantic type '{item.id}' is already defined in {defined[item.id]}")
+        defined.setdefault(item.id, source)
 
-    profile_sources = {}
+    profile_sources: dict[str, str] = {}
     for source, profile in profiles:
-        if profile["id"] in profile_sources:
-            first = profile_sources[profile["id"]]
-            problems.append(f"{source}: profile '{profile['id']}' is already defined in {first}")
-        profile_sources.setdefault(profile["id"], source)
+        if profile.id in profile_sources:
+            problems.append(f"{source}: profile '{profile.id}' is already defined in {profile_sources[profile.id]}")
+        profile_sources.setdefault(profile.id, source)
 
-        permitted = [entry["id"] for entry in profile["semantic_types"]]
+        permitted = [entry.id for entry in profile.semantic_types]
         for type_id in sorted(set(permitted)):
             if type_id not in defined:
                 problems.append(f"{source}: permits semantic type '{type_id}', which is not defined")
             if permitted.count(type_id) > 1:
                 problems.append(f"{source}: permits semantic type '{type_id}' more than once")
 
-        requirement_ids = [requirement["id"] for requirement in profile["requirements"]]
+        requirement_ids = [requirement.id for requirement in profile.requirements]
         for requirement_id in sorted(set(requirement_ids)):
             if requirement_ids.count(requirement_id) > 1:
                 problems.append(f"{source}: requirement '{requirement_id}' is defined more than once")
-        for requirement in profile["requirements"]:
-            name = f"requirement '{requirement['id']}'"
-            for type_id in requirement["semantic_types"]:
+        for requirement in profile.requirements:
+            name = f"requirement '{requirement.id}'"
+            for type_id in requirement.semantic_types:
                 if type_id not in permitted:
                     problems.append(
                         f"{source}: {name} uses semantic type '{type_id}', which the profile does not permit"
                     )
-            if requirement["level"] == "optional" and requirement["min_files"] != 0:
+            if requirement.level == "optional" and requirement.min_files != 0:
                 problems.append(f"{source}: {name} is optional, so min_files must be 0")
-            if requirement["level"] == "recommended" and requirement["min_files"] == 0:
+            if requirement.level == "recommended" and requirement.min_files == 0:
                 problems.append(f"{source}: {name} is recommended, so min_files must be at least 1")
-            if requirement.get("max_files") is not None and requirement["max_files"] < requirement["min_files"]:
+            if requirement.max_files is not None and requirement.max_files < requirement.min_files:
                 problems.append(f"{source}: {name} has max_files below min_files")
     return problems

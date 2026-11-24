@@ -11,14 +11,7 @@ and then to its first entry.
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import Any
-
-TEXT_FIELDS = {
-    "semantic_types": ("label", "definition"),
-    "profiles": ("dataset_category",),
-    "requirements": ("label", "help"),
-}
 
 
 def current_language() -> str:
@@ -38,25 +31,6 @@ def localized(text: Any, language: str | None = None) -> Any:
         return text
     language = language or current_language()
     return text.get(language) or text.get("en") or next(iter(text.values()), "")
-
-
-def localized_configuration(configuration: dict[str, Any], language: str | None = None) -> dict[str, Any]:
-    """A copy of the configuration with every text in one language."""
-    language = language or current_language()
-    result = deepcopy(configuration)
-    for item in result.get("semantic_types", []):
-        _localize(item, TEXT_FIELDS["semantic_types"], language)
-    for profile in result.get("profiles", []):
-        _localize(profile, TEXT_FIELDS["profiles"], language)
-        for requirement in profile.get("requirements", []):
-            _localize(requirement, TEXT_FIELDS["requirements"], language)
-    return result
-
-
-def _localize(item: dict[str, Any], fields: tuple[str, ...], language: str) -> None:
-    for field in fields:
-        if field in item:
-            item[field] = localized(item[field], language)
 
 
 class ConfigurationLabels:

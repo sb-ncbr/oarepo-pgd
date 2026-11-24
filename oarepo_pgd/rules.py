@@ -15,10 +15,10 @@ from typing import Any
 from flask_babel import gettext as _
 from flask_babel import ngettext
 
-from .texts import localized_configuration
+from .profiles import Configuration
 
 
-def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configuration: Mapping[str, Any]) -> list[str]:
+def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configuration: Configuration) -> list[str]:
     """Return error messages; an empty list means the files meet the selected profile.
 
     ``file_keys`` is the repository's current file inventory. Requirement matches
@@ -26,26 +26,24 @@ def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configu
     per matching requirement. An annotation whose file is not in the inventory
     is ignored.
     """
-    if not configuration["profiles"]:
+    if not configuration.profiles:
         return []
-    configuration = localized_configuration(configuration)
+    configuration = configuration.localized()
 
     selected = metadata.get("pgd_deposition_profile") or {}
-    profile = next((item for item in configuration["profiles"] if item["id"] == selected.get("id")), None)
+    profile = configuration.profile(selected.get("id"))
     if profile is None:
         return [_("Select a deposition profile.")]
 
     errors = []
-    name = profile["dataset_category"]
-    if selected.get("revision") != profile["revision"]:
+    name = profile.dataset_category
+    if selected.get("revision") != profile.revision:
         errors.append(_(
             "%(profile)s: the profile has changed since it was selected. "
             "Select it again and review the file meanings.",
             profile=name,
         ))
 
-    types = {item["id"]: item for item in configuration["semantic_types"]}
-    permitted = {item["id"]: item for item in profile["semantic_types"]}
     inventory = set(file_keys)
 
     annotations = {}
@@ -68,34 +66,37 @@ def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configu
         if len(set(assigned)) < len(assigned):
             errors.append(_("%(key)s: remove the repeated file meaning.", key=key))
         for type_id in dict.fromkeys(assigned):
-            label = types.get(type_id, {}).get("label", type_id)
-            if type_id not in permitted:
+            semantic_type = configuration.semantic_type(type_id)
+            label = semantic_type.label if semantic_type else type_id
+            permitted = profile.permitted(type_id)
+            if permitted is None:
                 errors.append(_(
                     "%(key)s: %(label)s is not a file meaning in the %(profile)s profile.",
                     key=key, label=label, profile=name,
                 ))
                 continue
-            formats = permitted[type_id].get("formats")
+            formats = permitted.formats
             if formats and not any(key.lower().endswith("." + suffix.lower()) for suffix in formats):
                 errors.append(_(
                     "%(key)s: %(label)s accepts %(formats)s files.", key=key, label=label, formats=", ".join(formats)
                 ))
-            if types[type_id].get("requires_description") and not (annotation.get("description") or "").strip():
+            described = (annotation.get("description") or "").strip()
+            if semantic_type and semantic_type.requires_description and not described:
                 errors.append(_("%(key)s: %(label)s needs a description of what the file is.", key=key, label=label))
 
-    for requirement in profile["requirements"]:
-        matching = set(requirement["semantic_types"])
+    for requirement in profile.requirements:
+        matching = set(requirement.semantic_types)
         found = sum(1 for annotation in annotations.values()
                     if matching & set(annotation.get("semantic_types") or []))
-        label = requirement["label"]
-        minimum, maximum = requirement["min_files"], requirement.get("max_files")
-        if requirement["level"] == "required" and found < minimum:
+        label = requirement.label
+        minimum, maximum = requirement.min_files, requirement.max_files
+        if requirement.level == "required" and found < minimum:
             message = ngettext(
                 "%(label)s: %(found)s of at least %(num)s file.",
                 "%(label)s: %(found)s of at least %(num)s files.",
                 minimum, label=label, found=found,
             )
-            errors.append(" ".join(filter(None, [message, requirement.get("help")])))
+            errors.append(" ".join(filter(None, [message, requirement.help])))
         if maximum is not None and found > maximum:
             errors.append(ngettext(
                 "%(label)s: %(found)s of at most %(num)s file. Remove or reassign the extra files.",

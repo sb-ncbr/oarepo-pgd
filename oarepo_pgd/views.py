@@ -26,6 +26,6 @@ def create_api_blueprint(app: Flask) -> Blueprint:
             model = next(iter(models))
         if model not in models:
             abort(404)
-        return jsonify(models[model].configuration)
+        return jsonify(models[model].configuration.to_dict())
 
     return blueprint

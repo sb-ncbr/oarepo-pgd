@@ -10,6 +10,7 @@ from flask import Flask
 
 from oarepo_pgd.components import DepositionProfilesComponent
 from oarepo_pgd.ext import OARepoPGD, finalize_app
+from oarepo_pgd.profiles import Configuration, Profile
 from oarepo_pgd.registry import NAMESPACE_KEY
 from oarepo_pgd.views import create_api_blueprint
 
@@ -18,7 +19,8 @@ OTHER_MODEL = SimpleNamespace(namespace=None, ui_blueprint_name=None)
 
 def registered_model(profile_id, application_id=None, ui_blueprint_name="datasets_ui"):
     """What OARepo keeps in OAREPO_MODELS: a runtime model with its built namespace."""
-    configuration = {"semantic_types": [], "profiles": [{"id": profile_id}]}
+    profile = Profile(profile_id, revision="1", dataset_category=profile_id, semantic_types=(), requirements=())
+    configuration = Configuration(profiles=(profile,))
     stored = {"configuration": configuration}
     # As oarepo-model builds it: keys whose value is None are left out.
     if application_id:
@@ -49,8 +51,8 @@ def test_each_app_serves_its_own_configuration():
     first = create_app({"datasets": registered_model("interviews")})
     second = create_app({"datasets": registered_model("imaging")})
 
-    assert served(first)[1]["profiles"] == [{"id": "interviews"}]
-    assert served(second, "?model=datasets")[1]["profiles"] == [{"id": "imaging"}]
+    assert [profile["id"] for profile in served(first)[1]["profiles"]] == ["interviews"]
+    assert [profile["id"] for profile in served(second, "?model=datasets")[1]["profiles"]] == ["imaging"]
 
 
 def test_overrides_cover_the_deposit_pages_of_profile_models():

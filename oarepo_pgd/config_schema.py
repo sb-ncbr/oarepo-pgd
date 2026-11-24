@@ -1,8 +1,8 @@
 """Marshmallow schemas of the YAML deposition configuration.
 
 A file in ``semantic-types/`` holds a list of semantic types and a file in
-``profiles/`` one deposition profile. The schemas only validate; the loader
-keeps the configuration as plain dictionaries.
+``profiles/`` one deposition profile. Each schema validates an entry and builds
+its object from ``profiles.py``.
 """
 
 from __future__ import annotations
@@ -10,7 +10,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from marshmallow import Schema, ValidationError, fields, validate
+from marshmallow import Schema, ValidationError, fields, post_load, validate
+
+from .profiles import PermittedType, Profile, Requirement, SemanticType
 
 LEVELS = ("required", "recommended", "optional")
 LANGUAGE = re.compile(r"^[a-z]{2,3}$")
@@ -53,7 +55,8 @@ class Text(fields.Field):
             return value
         if isinstance(value, dict) and value:
             if all(isinstance(code, str) and LANGUAGE.match(code) and _nonempty(text) for code, text in value.items()):
-                return value
+                # A copy, so later changes to the input do not reach the configuration.
+                return dict(value)
         raise self.make_error("invalid")
 
 
@@ -112,6 +115,11 @@ class SemanticTypeSchema(Schema):
     requires_description = Flag()
     search_filter = Flag()
 
+    @post_load
+    def build(self, data: dict[str, Any], **kwargs: Any) -> SemanticType:
+        """Return the semantic type."""
+        return SemanticType(**data)
+
 
 class PermittedTypeSchema(Schema):
     """A semantic type as one profile permits it."""
@@ -125,6 +133,11 @@ class PermittedTypeSchema(Schema):
         validate=validate.Length(min=1),
     )
 
+    @post_load
+    def build(self, data: dict[str, Any], **kwargs: Any) -> PermittedType:
+        """Return the permitted type."""
+        return PermittedType(**_tuples(data))
+
 
 class RequirementSchema(Schema):
     """One file requirement of a profile."""
@@ -137,6 +150,11 @@ class RequirementSchema(Schema):
     semantic_types = List(identifier(), required=True, validate=[validate.Length(min=1), _distinct])
     help = Text()
 
+    @post_load
+    def build(self, data: dict[str, Any], **kwargs: Any) -> Requirement:
+        """Return the requirement."""
+        return Requirement(**_tuples(data))
+
 
 class ProfileSchema(Schema):
     """One deposition profile."""
@@ -146,6 +164,23 @@ class ProfileSchema(Schema):
     dataset_category = Text(required=True)
     semantic_types = List(fields.Nested(PermittedTypeSchema), required=True, validate=validate.Length(min=1))
     requirements = List(fields.Nested(RequirementSchema), required=True)
+
+    @post_load
+    def build(self, data: dict[str, Any], **kwargs: Any) -> Profile:
+        """Return the profile."""
+        return Profile(**_tuples(data))
+
+
+def _tuples(data: dict[str, Any]) -> dict[str, Any]:
+    """The loaded data with its lists as tuples, as the objects keep them."""
+    return {key: tuple(value) if isinstance(value, list) else value for key, value in data.items()}
+
+
+class ConfigurationSchema(Schema):
+    """A whole configuration given as plain data."""
+
+    semantic_types = List(fields.Nested(SemanticTypeSchema), required=True)
+    profiles = List(fields.Nested(ProfileSchema), required=True)
 
 
 # What one file holds: a list of semantic types, or one profile.

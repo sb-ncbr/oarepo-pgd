@@ -21,7 +21,6 @@ from flask import current_app
 from oarepo_ui.resources.components import UIResourceComponent
 
 from .registry import profile_models
-from .texts import localized_configuration
 
 FORM_CONFIG_KEY = "deposition_profiles"
 
@@ -33,4 +32,4 @@ class DepositionProfilesComponent(UIResourceComponent):
         """Add the configuration when the resource's model uses profile-guided deposition."""
         entry = profile_models(current_app).get(self.config.model_name)
         if entry:
-            form_config[FORM_CONFIG_KEY] = localized_configuration(entry.configuration)
+            form_config[FORM_CONFIG_KEY] = entry.configuration.localized().to_dict()

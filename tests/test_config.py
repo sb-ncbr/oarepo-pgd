@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from oarepo_pgd.config import ConfigurationError, load_configuration
+from oarepo_pgd.config import ConfigurationError, load_configuration, parse_configuration
+from oarepo_pgd.profiles import Configuration
 
 TEST_CONFIG = Path(__file__).parent / "config"
 
@@ -44,12 +45,12 @@ def problems(directory):
 
 def test_loads_all_files_in_name_order():
     configuration = load_configuration(TEST_CONFIG)
-    assert [item["id"] for item in configuration["semantic_types"]] == ["site-photo", "field-notebook", "other"]
-    assert [item["id"] for item in configuration["profiles"]] == ["field-survey", "photo-only"]
+    assert [item.id for item in configuration.semantic_types] == ["site-photo", "field-notebook", "other"]
+    assert [item.id for item in configuration.profiles] == ["field-survey", "photo-only"]
 
 
 def test_missing_folders_give_an_empty_configuration(tmp_path):
-    assert load_configuration(tmp_path) == {"semantic_types": [], "profiles": []}
+    assert load_configuration(tmp_path) == Configuration()
 
 
 def test_reports_problems_from_every_file(tmp_path):
@@ -91,7 +92,13 @@ def test_texts_in_several_languages_and_flags_are_accepted(tmp_path):
     types = [{"id": "site-photo", "label": {"en": "Site photo", "cs": "Fotografie"}, "definition": "A photo.",
               "uri": "https://example.org/photo", "requires_description": True, "search_filter": False},
              TYPES[1]]
-    assert load_configuration(write(tmp_path, types=types))["semantic_types"] == types
+    configuration = load_configuration(write(tmp_path, types=types))
+    assert configuration.semantic_type("site-photo").requires_description is True
+    assert configuration.semantic_type("site-photo").search_filter is False
+    assert configuration.semantic_type("field-notebook").search_filter is True
+    # As plain data, an entry keeps what the YAML set and leaves out the defaults.
+    assert configuration.to_dict()["semantic_types"] == types
+    assert configuration.to_dict()["profiles"] == [profile()]
 
 
 def test_reports_duplicate_and_undefined_types(tmp_path):
@@ -131,3 +138,25 @@ def test_values_of_other_yaml_types_are_refused(tmp_path):
     text = problems(tmp_path)
     assert "semantic-types/binary.yaml: 0.id: Not a valid string." in text
     assert "profiles/set.yaml: requirements.0.semantic_types: Not a valid list." in text
+
+
+def test_plain_data_gives_the_same_configuration_as_the_files(tmp_path):
+    data = {"semantic_types": TYPES, "profiles": [profile()]}
+    assert parse_configuration(data) == load_configuration(write(tmp_path))
+
+
+@pytest.mark.parametrize(
+    ("data", "problem"),
+    [
+        ({"semantic_types": [], "profiles": {}}, "profiles: Not a valid list."),
+        ({"semantic_types": []}, "profiles: Missing data for required field."),
+        ({"semantic_types": [], "profiles": None}, "profiles: Field may not be null."),
+        ({"semantic_types": "site-photo", "profiles": []}, "semantic_types: Not a valid list."),
+        ([], "file: Invalid input type."),
+        ({"semantic_types": TYPES, "profiles": [profile(level="required")]}, "profiles.0.level: Unknown field."),
+        ({"semantic_types": TYPES[:1], "profiles": [profile()]}, "semantic type 'field-notebook', which is not"),
+    ],
+)
+def test_malformed_plain_data_is_refused(data, problem):
+    with pytest.raises(ConfigurationError, match=problem):
+        parse_configuration(data)

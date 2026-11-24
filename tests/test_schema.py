@@ -2,12 +2,13 @@ import marshmallow
 from marshmallow import fields
 from marshmallow_utils.context import context_schema
 
+from oarepo_pgd.profiles import Configuration
 from oarepo_pgd.schema import profile_schema_mixin
 
 ANNOTATIONS = [{"file_key": "interview.wav", "semantic_types": ["interview-recording"]}]
 
 
-class RecordSchema(profile_schema_mixin({"profiles": [], "semantic_types": []}), marshmallow.Schema):
+class RecordSchema(profile_schema_mixin(Configuration()), marshmallow.Schema):
     metadata = fields.Dict()
 
 

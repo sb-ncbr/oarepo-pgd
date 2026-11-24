@@ -16,10 +16,11 @@ from typing import Any
 from marshmallow import ValidationError, post_dump, validates_schema
 from marshmallow_utils.context import context_schema
 
+from .profiles import Configuration
 from .rules import check_deposit
 
 
-def profile_schema_mixin(configuration: dict[str, Any]) -> type:
+def profile_schema_mixin(configuration: Configuration) -> type:
     """Return a record-schema mixin bound to one model's configuration."""
 
     class ProfileSchemaMixin:

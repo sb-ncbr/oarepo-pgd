@@ -1,4 +1,5 @@
 from copy import deepcopy
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -44,7 +45,7 @@ def test_keeps_the_configuration_on_the_model():
     assert set(names) == {"RecordSchema", "record_service_components", NAMESPACE_KEY}
     stored = names[NAMESPACE_KEY].default
     assert stored["application_id"] == "surveys"
-    assert [profile["id"] for profile in stored["configuration"]["profiles"]] == ["field-survey", "photo-only"]
+    assert [profile.id for profile in stored["configuration"].profiles] == ["field-survey", "photo-only"]
 
 
 def test_accepts_an_identical_existing_definition():
@@ -59,13 +60,11 @@ def test_search_filters_use_the_configured_labels():
     profile_filter = properties["pgd_deposition_profile"]["properties"]["id"]["facet-def"]
     type_filter = properties["pgd_file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
     assert profile_filter["field"] == "metadata.pgd_deposition_profile.id"
-    assert profile_filter["value_labels"].texts == {
-        profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]
-    }
+    assert profile_filter["value_labels"].texts == {item.id: item.dataset_category for item in configuration.profiles}
     assert type_filter["field"] == "metadata.pgd_file_annotations.semantic_types"
-    assert type_filter["size"] >= len(configuration["semantic_types"])
-    assert profile_filter["size"] >= len(configuration["profiles"])
-    assert type_filter["value_labels"].texts == {item["id"]: item["label"] for item in configuration["semantic_types"]}
+    assert type_filter["size"] >= len(configuration.semantic_types)
+    assert profile_filter["size"] >= len(configuration.profiles)
+    assert type_filter["value_labels"].texts == {item.id: item.label for item in configuration.semantic_types}
 
 
 def test_refuses_a_different_existing_definition():
@@ -76,8 +75,9 @@ def test_refuses_a_different_existing_definition():
 
 def test_a_type_can_stay_out_of_the_file_types_filter():
     configuration = load_configuration(TEST_CONFIG)
-    configuration["semantic_types"][0] = {**configuration["semantic_types"][0], "search_filter": False}
-    hidden = configuration["semantic_types"][0]["id"]
+    first, *others = configuration.semantic_types
+    configuration = replace(configuration, semantic_types=(replace(first, search_filter=False), *others))
+    hidden = first.id
 
     def type_filter(properties):
         return properties["pgd_file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
