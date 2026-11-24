@@ -7,14 +7,13 @@ Semantic types are read from every ``*.yaml`` file in ``<directory>/semantic-typ
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 import yaml
-from jsonschema import Draft202012Validator
+from marshmallow import ValidationError, fields
 
-SCHEMA = json.loads(Path(__file__).with_name("configuration.schema.json").read_text(encoding="utf-8"))
+from .config_schema import PROFILE, SEMANTIC_TYPES, problems
 
 
 class ConfigurationError(Exception):
@@ -24,39 +23,39 @@ class ConfigurationError(Exception):
 def load_configuration(directory: str | Path) -> dict[str, list[dict[str, Any]]]:
     """Return ``{"semantic_types": [...], "profiles": [...]}`` or raise ConfigurationError."""
     directory = Path(directory)
-    problems = []
+    found: list[str] = []
     semantic_types = [
         (source, item)
-        for source, items in _read_files(directory, "semantic-types", "semanticTypes", problems)
+        for source, items in _read_files(directory, "semantic-types", SEMANTIC_TYPES, found)
         for item in items
     ]
-    profiles = _read_files(directory, "profiles", "profile", problems)
-    if not problems:
-        problems = _check_references(semantic_types, profiles)
-    if problems:
-        raise ConfigurationError("Invalid deposition configuration:\n" + "\n".join(f"  {p}" for p in problems))
+    profiles = _read_files(directory, "profiles", PROFILE, found)
+    if not found:
+        found = _check_references(semantic_types, profiles)
+    if found:
+        raise ConfigurationError("Invalid deposition configuration:\n" + "\n".join(f"  {p}" for p in found))
     return {
         "semantic_types": [item for _, item in semantic_types],
         "profiles": [profile for _, profile in profiles],
     }
 
 
-def _read_files(directory: Path, folder: str, definition: str, problems: list[str]) -> list[tuple[str, Any]]:
-    validator = Draft202012Validator({**SCHEMA, "$ref": f"#/$defs/{definition}"})
+def _read_files(directory: Path, folder: str, content: fields.Field, found: list[str]) -> list[tuple[str, Any]]:
     results = []
     for path in sorted((directory / folder).glob("*.yaml")):
         source = f"{folder}/{path.name}"
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
         except yaml.YAMLError as error:
-            problems.append(f"{source}: {error}")
+            found.append(f"{source}: {error}")
             continue
-        errors = sorted(validator.iter_errors(data), key=lambda error: list(error.absolute_path))
-        for error in errors:
-            location = ".".join(str(part) for part in error.absolute_path) or "file"
-            problems.append(f"{source}: {location}: {error.message}")
-        if not errors:
-            results.append((source, data))
+        if data is None:
+            found.append(f"{source}: file: The file is empty.")
+            continue
+        try:
+            results.append((source, content.deserialize(data)))
+        except ValidationError as error:
+            found.extend(f"{source}: {problem}" for problem in problems(error))
     return results
 
 

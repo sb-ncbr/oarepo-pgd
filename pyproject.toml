@@ -10,7 +10,7 @@ dependencies = [
     "oarepo-model>=7.0.0,<8.0.0",
     "oarepo-ui>=14.0.0,<15.0.0",
     "PyYAML",
-    "jsonschema",
+    "marshmallow",
 ]
 
 [project.urls]

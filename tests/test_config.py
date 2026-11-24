@@ -57,7 +57,41 @@ def test_reports_problems_from_every_file(tmp_path):
     (tmp_path / "profiles" / "broken.yaml").write_text("id: [unclosed\n")
     text = problems(tmp_path)
     assert "profiles/broken.yaml:" in text
-    assert "profiles/profile-0.yaml: file: Additional properties are not allowed ('min_file' was unexpected)" in text
+    assert "profiles/profile-0.yaml: min_file: Unknown field." in text
+
+
+def test_names_the_place_of_a_problem(tmp_path):
+    requirement = {"id": "Photos", "label": {"en": ""}, "level": "mandatory", "min_files": "1", "semantic_types": []}
+    types = [{"id": "site-photo", "label": "Site photo"}, "site-photo"]
+    text = problems(write(tmp_path, types=types, profiles=[profile(requirements=[requirement], revision=1)]))
+    assert "semantic-types/types.yaml: 0.definition: Missing data for required field." in text
+    assert "semantic-types/types.yaml: 1: Invalid input type." in text
+    assert "profiles/profile-0.yaml: revision: Not a valid string." in text
+    assert "profiles/profile-0.yaml: requirements.0.id: Must start with a lowercase letter or a digit" in text
+    assert "profiles/profile-0.yaml: requirements.0.label: Must be a non-empty text or a mapping" in text
+    assert "profiles/profile-0.yaml: requirements.0.level: Must be one of: required, recommended, optional." in text
+    assert "profiles/profile-0.yaml: requirements.0.min_files: Must be a whole number of at least 0." in text
+    assert "profiles/profile-0.yaml: requirements.0.semantic_types: Shorter than minimum length 1." in text
+
+
+def test_a_file_of_the_wrong_shape_is_reported(tmp_path):
+    write(tmp_path)
+    (tmp_path / "semantic-types" / "empty.yaml").write_text("")
+    (tmp_path / "semantic-types" / "set.yaml").write_text("!!set {}\n")
+    (tmp_path / "semantic-types" / "mapping.yaml").write_text("id: site-photo\n")
+    (tmp_path / "profiles" / "list.yaml").write_text("- id: survey\n")
+    text = problems(tmp_path)
+    assert "semantic-types/empty.yaml: file: The file is empty." in text
+    assert "semantic-types/set.yaml: file: Not a valid list." in text
+    assert "semantic-types/mapping.yaml: file: Not a valid list." in text
+    assert "profiles/list.yaml: file: Invalid input type." in text
+
+
+def test_texts_in_several_languages_and_flags_are_accepted(tmp_path):
+    types = [{"id": "site-photo", "label": {"en": "Site photo", "cs": "Fotografie"}, "definition": "A photo.",
+              "uri": "https://example.org/photo", "requires_description": True, "search_filter": False},
+             TYPES[1]]
+    assert load_configuration(write(tmp_path, types=types))["semantic_types"] == types
 
 
 def test_reports_duplicate_and_undefined_types(tmp_path):
@@ -84,3 +118,16 @@ def test_reports_requirement_problems(tmp_path):
     assert "requirement 'photos' is optional, so min_files must be 0" in text
     assert "requirement 'notes' is recommended, so min_files must be at least 1" in text
     assert "requirement 'photos' uses semantic type 'drone-video', which the profile does not permit" in text
+
+
+def test_values_of_other_yaml_types_are_refused(tmp_path):
+    write(tmp_path)
+    (tmp_path / "semantic-types" / "binary.yaml").write_text(
+        "- {id: !!binary cGhvdG9z, label: Photos, definition: Photos.}\n"
+    )
+    (tmp_path / "profiles" / "set.yaml").write_text(yaml.safe_dump(profile(id="sets")).replace(
+        "semantic_types:\n  - site-photo", "semantic_types: !!set {site-photo: null}"
+    ))
+    text = problems(tmp_path)
+    assert "semantic-types/binary.yaml: 0.id: Not a valid string." in text
+    assert "profiles/set.yaml: requirements.0.semantic_types: Not a valid list." in text
