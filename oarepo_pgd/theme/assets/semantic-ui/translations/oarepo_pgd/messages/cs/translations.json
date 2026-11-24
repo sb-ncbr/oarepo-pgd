@@ -1,6 +1,5 @@
 {
   "Choose a deposition profile, upload your files, and review their meanings. You can save your draft and continue later.": "Vyberte depoziční profil, nahrajte soubory a zkontrolujte jejich významy. Koncept můžete uložit a pokračovat později.",
-  "Complete the file requirements in Files and meanings before publishing.": "Před publikováním splňte požadavky na soubory v části Soubory a jejich významy.",
   "{{count}} distinct file matching_0": "{{count}} odpovídající soubor",
   "{{count}} distinct file matching_1": "{{count}} odpovídající soubory",
   "{{count}} distinct file matching_2": "{{count}} odpovídajících souborů",
@@ -44,7 +43,6 @@
   "Semantic types": "Sémantické typy",
   "The deposition profiles are missing from this form's configuration, so file requirements cannot be checked.": "V konfiguraci formuláře chybí depoziční profily, takže požadavky na soubory nelze zkontrolovat.",
   "the file is annotated more than once. Keep one annotation.": "soubor má více anotací. Ponechte jen jednu.",
-  "The file requirements cannot be checked, so the deposit cannot be published.": "Požadavky na soubory nelze zkontrolovat, takže depozit nelze publikovat.",
   "This draft uses a profile version that is no longer available. Select a profile and review the file meanings.": "Tento koncept používá verzi profilu, která už není k dispozici. Vyberte profil a zkontrolujte významy souborů.",
   "Upload files": "Nahrát soubory"
 }

@@ -58,10 +58,7 @@ def test_overrides_cover_the_deposit_pages_of_profile_models():
 
     overrides = app.config["OAREPO_UI_OVERRIDES"]
     assert {override.endpoint for override in overrides} == {"datasets_ui.deposit_create", "datasets_ui.deposit_edit"}
-    assert {override.overridable_id for override in overrides} == {
-        "Data.Form.WizardForm.container",
-        "Data.Form.TabForm.PublishButton",
-    }
+    assert {override.overridable_id for override in overrides} == {"Data.Form.WizardForm.container"}
     assert served(app)[0] == 200
     assert served(app, "?model=vocabularies")[0] == 404
 
@@ -96,7 +93,7 @@ def test_overrides_do_not_leak_into_other_apps():
     first = create_app({"datasets": registered_model("interviews")})
     second = create_app({"datasets": registered_model("imaging")}, OAREPO_PGD_UI_OVERRIDES=False)
 
-    assert len(first.config["OAREPO_UI_OVERRIDES"]) == 4
+    assert len(first.config["OAREPO_UI_OVERRIDES"]) == 2
     assert second.config["OAREPO_UI_OVERRIDES"] == set()
     # The default set shared by all apps is never changed.
     assert oarepo_ui.config.OAREPO_UI_OVERRIDES == set()

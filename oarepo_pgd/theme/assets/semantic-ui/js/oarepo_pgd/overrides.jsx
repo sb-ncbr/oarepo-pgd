@@ -1,10 +1,8 @@
-// Components the plugin registers through OAREPO_UI_OVERRIDES.
+// The component the plugin registers through OAREPO_UI_OVERRIDES.
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import { TabForm } from "@js/oarepo_ui/forms";
 import { withProfiles } from "./sections";
-
-export { ProfilePublishButton } from "./PublishButton";
 
 /**
  * Replaces the tabbed deposit form with the same form whose files section has

@@ -75,15 +75,9 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
        ]
    ```
 
-   Without it the form says that the profiles are missing and keeps the publish button disabled.
+   Without it the form says that the profiles are missing.
 
-5. Link the plugin's stylesheet in the repository's `templates/css.html`:
-
-   ```jinja
-   {{ webpack['oarepo_pgd_components.css'] }}
-   ```
-
-6. Run `./run.sh install` again, so the frontend is rebuilt with the plugin's components.
+5. Run `./run.sh install` again, so the frontend is rebuilt with the plugin's components.
 
 That is all for a repository with the standard deposit form.
 
@@ -107,41 +101,36 @@ In the short form `{en: ..., cs: ...}`, quote a text that contains a comma, or w
 - Annotations that follow the files. An annotation of a file the draft does not have is ignored by the check, so a client can save annotations before uploading the files, and a draft of a new version keeps the previous version's annotations until its files are imported. A published record keeps only the annotations of its own files.
 - The model's configuration in the deposit form's form config, as `deposition_profiles`.
 - `GET /api/deposition-profiles?model=<model>` with the same configuration, for other software, with texts in all their languages. `model` can be omitted while one model uses the plugin.
-- Profile controls in the deposit form's files section, and a publish button that stays disabled until the files are known to meet the profile.
+- Profile controls in the deposit form's files section. They use the classes of the repository's theme, so the plugin has no stylesheet.
 - English and Czech texts: form texts go through the plugin's i18next instance and server messages through gettext. Adding another language means adding two catalogues to the plugin: a `translations.json` in `theme/assets/semantic-ui/translations/oarepo_pgd/messages/<lang>/`, registered in that folder's `index.js`, and a `.po` file made from `translations/messages.pot`, compiled to `translations/<lang>/LC_MESSAGES/messages.mo`.
 
 ## Deposit form: standard and custom
 
-**Standard form.** For a repository with the generated tabbed deposit form (`useWizardForm`), the plugin registers two overrides for each model's deposit pages: the tabbed form, whose files section it wraps, and the publish button. The files tab is renamed "Files and meanings" and shows an error badge when the server reports a profile problem; the form's error summary lists the messages under **File meanings**. Nothing needs to be added to the host's JavaScript.
+**Standard form.** For a repository with the generated tabbed deposit form (`useWizardForm`), the plugin overrides the tabbed form of each model's deposit pages and wraps its files section. The files tab is renamed "Files and meanings" and shows an error badge when the server reports a profile problem; the form's error summary lists the messages under **File meanings**. Nothing needs to be added to the host's JavaScript.
 
-**Custom forms.** A host with its own deposit form switches the automatic overrides off in `invenio.cfg` and mounts the two components itself:
+**Custom forms.** A host with its own deposit form switches the automatic override off in `invenio.cfg` and mounts the profile controls itself:
 
 ```python
 OAREPO_PGD_UI_OVERRIDES = False
 ```
 
-- *A custom tabbed form* that keeps a section with the key `files` and the `TabForm.PublishButton` slot wraps its sections and overrides the slot in its `forms/index.js`:
+- *A custom tabbed form* that keeps a section with the key `files` wraps its sections in its `forms/index.js`:
 
   ```js
-  import { withProfiles, ProfilePublishButton } from "@js/oarepo_pgd";
+  import { withProfiles } from "@js/oarepo_pgd";
 
   const sections = withProfiles(mySections);
-
-  const componentOverrides = {
-    [`${config.overridableIdPrefix}.TabForm.PublishButton`]: ProfilePublishButton,
-  };
   ```
 
-- *A form without tabs*, or without those two places, renders `ProfileFields` around its uploader and `ProfilePublishButton` in its action area:
+- *A form without tabs*, or without a `files` section, renders `ProfileFields` around its uploader:
 
   ```js
-  import { ProfileFields, ProfilePublishButton } from "@js/oarepo_pgd";
+  import { ProfileFields } from "@js/oarepo_pgd";
 
   <ProfileFields record={record} uploader={<MyUploader />} />
-  <ProfilePublishButton record={record} />
   ```
 
-  Both must be inside the form's Formik, Redux and form-config context, as the standard sections are. Showing server errors for `metadata.deposition_profile` and `metadata.file_annotations` next to the files is then the form's own task.
+  It must be inside the form's Formik, Redux and form-config context, as the standard sections are. Showing server errors for `metadata.deposition_profile` and `metadata.file_annotations` next to the files is then the form's own task.
 
 ## Tests
 

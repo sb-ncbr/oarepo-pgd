@@ -1,10 +1,9 @@
 """Flask extension: put the profile controls into the deposit forms.
 
 For every model of the app that uses profile-guided deposition this overrides
-two components of the model's deposit pages: the tabbed form, whose files
-section gets the profile controls, and the publish button. A host that already
-overrides one of them keeps its own component; it can then compose the
-plugin's components itself (see the README).
+the tabbed form of the model's deposit pages, so its files section gets the
+profile controls. A host that already overrides the form keeps its own
+component; it can then compose the plugin's components itself (see the README).
 
 ``OAREPO_PGD_UI_OVERRIDES = False`` switches the automatic overrides off.
 """
@@ -30,13 +29,10 @@ def ui_overrides(models: dict[str, ModelProfiles]) -> list[UIComponentOverride]:
         if not entry.ui_blueprint:
             continue
         prefix = f"{entry.application_id.capitalize()}.Form"
-        components = {
-            f"{prefix}.WizardForm.container": UIComponent("ProfileTabForm", "@js/oarepo_pgd/overrides"),
-            f"{prefix}.TabForm.PublishButton": UIComponent("ProfilePublishButton", "@js/oarepo_pgd/overrides"),
-        }
+        form = UIComponent("ProfileTabForm", "@js/oarepo_pgd/overrides")
         for page in ("deposit_create", "deposit_edit"):
-            for overridable_id, component in components.items():
-                overrides.append(UIComponentOverride(f"{entry.ui_blueprint}.{page}", overridable_id, component))
+            endpoint = f"{entry.ui_blueprint}.{page}"
+            overrides.append(UIComponentOverride(endpoint, f"{prefix}.WizardForm.container", form))
     return overrides
 
 
