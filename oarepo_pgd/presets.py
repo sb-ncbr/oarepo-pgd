@@ -7,7 +7,7 @@ Add the preset to the model's ``presets`` list::
     presets=[rdm_complete_preset, pgd_preset(__file__)],
 
 It reads the YAML configuration from ``config/`` next to the model module, adds
-the ``deposition_profile`` and ``file_annotations`` metadata fields, makes
+the ``pgd_deposition_profile`` and ``pgd_file_annotations`` metadata fields, makes
 the record schema check every draft against its selected profile, and publishes
 a record with the annotations of its own files only. An invalid
 configuration, a configuration without profiles, or a model that already
@@ -33,7 +33,7 @@ from .services import PublishedFileAnnotationsComponent
 from .texts import ConfigurationLabels
 
 PROPERTIES = {
-    "deposition_profile": {
+    "pgd_deposition_profile": {
         "type": "object",
         "label": {"en": "Deposition profile", "cs": "Depoziční profil"},
         "properties": {
@@ -41,7 +41,7 @@ PROPERTIES = {
             "revision": {"type": "keyword", "searchable": False},
         },
     },
-    "file_annotations": {
+    "pgd_file_annotations": {
         "type": "array",
         # Shown with the server's messages in the form's error summary.
         "label": {"en": "File meanings", "cs": "Významy souborů"},
@@ -73,9 +73,9 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
     "File types" filter.
     """
     properties = deepcopy(PROPERTIES)
-    properties["deposition_profile"]["properties"]["id"]["facet-def"] = {
+    properties["pgd_deposition_profile"]["properties"]["id"]["facet-def"] = {
         "facet": TERMS_FACET,
-        "field": "metadata.deposition_profile.id",
+        "field": "metadata.pgd_deposition_profile.id",
         "label": _("Dataset category"),
         # Show every profile; the search engine returns 10 values by default.
         "size": max(len(configuration["profiles"]), 10),
@@ -83,9 +83,9 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
             {profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]}
         ),
     }
-    properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"] = {
+    properties["pgd_file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"] = {
         "facet": TERMS_FACET,
-        "field": "metadata.file_annotations.semantic_types",
+        "field": "metadata.pgd_file_annotations.semantic_types",
         "label": _("File types"),
         "size": max(len(configuration["semantic_types"]), 10),
         "value_labels": ConfigurationLabels(
@@ -94,7 +94,7 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
     }
     hidden = [item["id"] for item in configuration["semantic_types"] if item.get("search_filter") is False]
     if hidden:
-        type_filter = properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
+        type_filter = properties["pgd_file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
         type_filter["exclude"] = hidden
     return properties
 
@@ -134,8 +134,9 @@ def pgd_preset(
                     for field, definition in PROPERTIES.items():
                         if field in properties and properties[field] not in (definition, fields[field]):
                             raise ValueError(
-                                f"{model.name}: metadata field {field!r} is already defined with a "
-                                "different definition. oarepo-pgd defines it; remove it from the model."
+                                f"{model.name}: metadata field {field!r} is already defined differently, by the "
+                                "model or by another package. oarepo-pgd defines this field itself; remove or "
+                                "rename the other definition."
                             )
                     properties.update(deepcopy(fields))
                     types[index] = {**collection, name: metadata}

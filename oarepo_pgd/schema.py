@@ -32,7 +32,7 @@ def profile_schema_mixin(configuration: dict[str, Any]) -> type:
                 return
             errors = check_deposit(data.get("metadata") or {}, draft.files.entries.keys(), configuration)
             if errors:
-                raise ValidationError({"metadata": {"file_annotations": errors}})
+                raise ValidationError({"metadata": {"pgd_file_annotations": errors}})
 
         @post_dump
         def hide_annotations_without_file_access(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
@@ -40,9 +40,9 @@ def profile_schema_mixin(configuration: dict[str, Any]) -> type:
                 permission_check = context_schema.get().get("field_permission_check")
             except LookupError:
                 return data
-            metadata = data.get("metadata")
-            if permission_check and metadata and "file_annotations" in metadata and not permission_check("read_files"):
-                metadata.pop("file_annotations")
+            metadata = data.get("metadata") or {}
+            if permission_check and "pgd_file_annotations" in metadata and not permission_check("read_files"):
+                metadata.pop("pgd_file_annotations")
             return data
 
     return ProfileSchemaMixin

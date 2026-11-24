@@ -24,6 +24,6 @@ class PublishedFileAnnotationsComponent(ServiceComponent):
     def publish(self, identity: Any, draft: Any = None, record: Any = None, **kwargs: Any) -> None:
         """Keep the annotations of the record's own files."""
         metadata = record.get("metadata") or {}
-        if metadata.get("file_annotations"):
+        if metadata.get("pgd_file_annotations"):
             file_keys = record.files.entries.keys() if record.files.enabled else ()
-            metadata["file_annotations"] = annotations_of_files(metadata["file_annotations"], file_keys)
+            metadata["pgd_file_annotations"] = annotations_of_files(metadata["pgd_file_annotations"], file_keys)

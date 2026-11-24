@@ -2,7 +2,7 @@ import React from "react";
 import { i18next } from "@translations/oarepo_pgd";
 import { ProfileFields } from "./ProfileFields";
 
-const PATHS = ["metadata.deposition_profile", "metadata.file_annotations"];
+const PATHS = ["metadata.pgd_deposition_profile", "metadata.pgd_file_annotations"];
 
 /**
  * Wrap the files section of a section list with the profile controls.

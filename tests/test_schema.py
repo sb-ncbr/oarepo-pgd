@@ -12,7 +12,7 @@ class RecordSchema(profile_schema_mixin({"profiles": [], "semantic_types": []}),
 
 
 def dump(allowed_actions):
-    record = {"metadata": {"title": "Interview", "file_annotations": ANNOTATIONS}}
+    record = {"metadata": {"title": "Interview", "pgd_file_annotations": ANNOTATIONS}}
     token = context_schema.set({"field_permission_check": lambda action: action in allowed_actions})
     try:
         return RecordSchema().dump(record)
@@ -21,7 +21,7 @@ def dump(allowed_actions):
 
 
 def test_annotations_shown_to_users_who_may_read_the_files():
-    assert dump({"read_files"})["metadata"]["file_annotations"] == ANNOTATIONS
+    assert dump({"read_files"})["metadata"]["pgd_file_annotations"] == ANNOTATIONS
 
 
 def test_annotations_hidden_from_users_who_may_not_read_the_files():

@@ -30,7 +30,7 @@ def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configu
         return []
     configuration = localized_configuration(configuration)
 
-    selected = metadata.get("deposition_profile") or {}
+    selected = metadata.get("pgd_deposition_profile") or {}
     profile = next((item for item in configuration["profiles"] if item["id"] == selected.get("id")), None)
     if profile is None:
         return [_("Select a deposition profile.")]
@@ -49,7 +49,7 @@ def check_deposit(metadata: Mapping[str, Any], file_keys: Iterable[str], configu
     inventory = set(file_keys)
 
     annotations = {}
-    for annotation in metadata.get("file_annotations") or []:
+    for annotation in metadata.get("pgd_file_annotations") or []:
         key = annotation.get("file_key")
         if key not in inventory:
             # Not an error: the file may be uploaded later; see annotations_of_files.

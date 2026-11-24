@@ -59,7 +59,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 
    A count above `max_files` is an error at every level.
 
-   The full format is defined by the schemas in `oarepo_pgd/config_schema.py`. A mistake in a YAML file stops the repository at startup with a message naming the file. So does a missing configuration: an enabled preset needs at least one profile, so deposits are never silently left unchecked. The preset defines the `deposition_profile` and `file_annotations` fields itself; a model that already defines either differently is refused.
+   The full format is defined by the schemas in `oarepo_pgd/config_schema.py`. A mistake in a YAML file stops the repository at startup with a message naming the file. So does a missing configuration: an enabled preset needs at least one profile, so deposits are never silently left unchecked. The preset defines the `pgd_deposition_profile` and `pgd_file_annotations` fields itself. The `pgd_` prefix keeps them apart from fields of the model and of other packages; if either name is already defined differently, the repository stops at startup and names the field.
 
 4. Give the deposit form the configuration: add the plugin's component to the `components` list of the model's UI resource config class, in `ui/<model>/__init__.py`, after the entries already there:
 
@@ -95,8 +95,8 @@ In the short form `{en: ..., cs: ...}`, quote a text that contains a comma, or w
 
 ## What the plugin adds
 
-- Metadata fields `deposition_profile` and `file_annotations` on the model. A user who may not read a record's files does not see its `file_annotations`, which name and describe those files; the selected profile stays visible.
-- Two search filters on the search page and in the search API: **Dataset category** (`metadata.deposition_profile.id`, the selected profile) and **File types** (`metadata.file_annotations.semantic_types`, the types assigned to the record's files). They show the labels from the YAML and count records, so a record with three recordings counts once under its type. A semantic type with `search_filter: false` in its definition, such as a catch-all `other`, is left out of **File types**. A repository without facet groups shows them with all other filters; a repository with facet groups lists them in a group with `AddFacetGroup`, by these names.
+- Metadata fields `pgd_deposition_profile` and `pgd_file_annotations` on the model. A user who may not read a record's files does not see its `pgd_file_annotations`, which name and describe those files; the selected profile stays visible.
+- Two search filters on the search page and in the search API: **Dataset category** (`metadata.pgd_deposition_profile.id`, the selected profile) and **File types** (`metadata.pgd_file_annotations.semantic_types`, the types assigned to the record's files). They show the labels from the YAML and count records, so a record with three recordings counts once under its type. A semantic type with `search_filter: false` in its definition, such as a catch-all `other`, is left out of **File types**. A repository without facet groups shows them with all other filters; a repository with facet groups lists them in a group with `AddFacetGroup`, by these names.
 - A record-schema check: errors are reported on every draft save and block publication, including publication through publish requests and by API clients.
 - Annotations that follow the files. An annotation of a file the draft does not have is ignored by the check, so a client can save annotations before uploading the files, and a draft of a new version keeps the previous version's annotations until its files are imported. A published record keeps only the annotations of its own files.
 - The model's configuration in the deposit form's form config, as `deposition_profiles`.
@@ -130,7 +130,7 @@ OAREPO_PGD_UI_OVERRIDES = False
   <ProfileFields record={record} uploader={<MyUploader />} />
   ```
 
-  It must be inside the form's Formik, Redux and form-config context, as the standard sections are. Showing server errors for `metadata.deposition_profile` and `metadata.file_annotations` next to the files is then the form's own task.
+  It must be inside the form's Formik, Redux and form-config context, as the standard sections are. Showing server errors for `metadata.pgd_deposition_profile` and `metadata.pgd_file_annotations` next to the files is then the form's own task.
 
 ## Tests
 

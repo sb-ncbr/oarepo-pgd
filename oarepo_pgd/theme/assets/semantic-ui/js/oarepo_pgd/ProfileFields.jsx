@@ -14,12 +14,12 @@ const t = (message, params) => i18next.t(message, params);
 export function ProfileFields({ record, uploader }) {
   const { setFieldValue } = useFormikContext();
   const { configuration, metadata, filesEnabled, present, keys, result } = useDepositionCheck(record);
-  const selected = metadata.deposition_profile;
-  const annotations = metadata.file_annotations ?? [];
+  const selected = metadata.pgd_deposition_profile;
+  const annotations = metadata.pgd_file_annotations ?? [];
   const profile = configuration?.profiles.find(
     (item) => item.id === selected?.id && item.revision === selected?.revision,
   );
-  const setAnnotations = (value) => setFieldValue("metadata.file_annotations", value);
+  const setAnnotations = (value) => setFieldValue("metadata.pgd_file_annotations", value);
 
   // One owner for automatic annotation changes: drop annotations of files
   // deleted in this session and suggest meanings for new uploads, as one write.
@@ -70,7 +70,7 @@ export function ProfileFields({ record, uploader }) {
         value={profile?.id ?? ""}
         onChange={(event, { value }) => {
           const choice = configuration.profiles.find((item) => item.id === value);
-          setFieldValue("metadata.deposition_profile", choice ? { id: choice.id, revision: choice.revision } : {});
+          setFieldValue("metadata.pgd_deposition_profile", choice ? { id: choice.id, revision: choice.revision } : {});
         }}
       />
       {selected?.id && !profile && (

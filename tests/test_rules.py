@@ -12,6 +12,6 @@ SHARED = json.loads((Path(__file__).parent / "cases" / "rules.json").read_text(e
 
 @pytest.mark.parametrize("case", SHARED["cases"], ids=lambda case: case["name"])
 def test_shared_case(case):
-    metadata = {"deposition_profile": case["profile"], "file_annotations": case["annotations"]}
+    metadata = {"pgd_deposition_profile": case["profile"], "pgd_file_annotations": case["annotations"]}
     configuration = SHARED["configurations"][case["configuration"]]
     assert check_deposit(metadata, case["file_keys"], configuration) == case["errors"]

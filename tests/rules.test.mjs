@@ -12,7 +12,7 @@ const english = translator(read("../oarepo_pgd/theme/assets/semantic-ui/translat
 
 for (const item of shared.cases) {
   test(item.name, () => {
-    const metadata = { deposition_profile: item.profile, file_annotations: item.annotations };
+    const metadata = { pgd_deposition_profile: item.profile, pgd_file_annotations: item.annotations };
     const result = checkDeposit(shared.configurations[item.configuration], metadata, item.file_keys);
     assert.deepEqual(result.errors.map((error) => errorText(error, english)), item.errors);
     if (item.counts) assert.deepEqual(result.counts, item.counts);

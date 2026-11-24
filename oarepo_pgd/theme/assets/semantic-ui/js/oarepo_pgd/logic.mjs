@@ -58,7 +58,7 @@ export function checkDeposit(configuration, metadata, fileKeys) {
   const add = (key, message, params = {}) => errors.push({ key, message, params });
   if (!configuration.profiles.length) return { errors, counts };
 
-  const selected = metadata?.deposition_profile ?? {};
+  const selected = metadata?.pgd_deposition_profile ?? {};
   const profile = configuration.profiles.find((item) => item.id === selected.id);
   if (!profile) {
     add(null, "Select a deposition profile.");
@@ -74,7 +74,7 @@ export function checkDeposit(configuration, metadata, fileKeys) {
   const inventory = new Set(fileKeys);
 
   const annotations = new Map();
-  for (const annotation of metadata?.file_annotations ?? []) {
+  for (const annotation of metadata?.pgd_file_annotations ?? []) {
     const key = annotation.file_key;
     // An annotation of a file that is not there is ignored, as on the server.
     if (!inventory.has(key)) continue;

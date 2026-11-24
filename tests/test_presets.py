@@ -56,21 +56,21 @@ def test_accepts_an_identical_existing_definition():
 def test_search_filters_use_the_configured_labels():
     configuration = load_configuration(TEST_CONFIG)
     properties = add_fields([{"Metadata": {"properties": {}}}])[0]["Metadata"]["properties"]
-    profile_filter = properties["deposition_profile"]["properties"]["id"]["facet-def"]
-    type_filter = properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
-    assert profile_filter["field"] == "metadata.deposition_profile.id"
+    profile_filter = properties["pgd_deposition_profile"]["properties"]["id"]["facet-def"]
+    type_filter = properties["pgd_file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
+    assert profile_filter["field"] == "metadata.pgd_deposition_profile.id"
     assert profile_filter["value_labels"].texts == {
         profile["id"]: profile["dataset_category"] for profile in configuration["profiles"]
     }
-    assert type_filter["field"] == "metadata.file_annotations.semantic_types"
+    assert type_filter["field"] == "metadata.pgd_file_annotations.semantic_types"
     assert type_filter["size"] >= len(configuration["semantic_types"])
     assert profile_filter["size"] >= len(configuration["profiles"])
     assert type_filter["value_labels"].texts == {item["id"]: item["label"] for item in configuration["semantic_types"]}
 
 
 def test_refuses_a_different_existing_definition():
-    existing = {"Metadata": {"properties": {"file_annotations": {"type": "keyword"}}}}
-    with pytest.raises(ValueError, match="'file_annotations' is already defined"):
+    existing = {"Metadata": {"properties": {"pgd_file_annotations": {"type": "keyword"}}}}
+    with pytest.raises(ValueError, match="'pgd_file_annotations' is already defined"):
         add_fields([existing], name="collision")
 
 
@@ -78,8 +78,9 @@ def test_a_type_can_stay_out_of_the_file_types_filter():
     configuration = load_configuration(TEST_CONFIG)
     configuration["semantic_types"][0] = {**configuration["semantic_types"][0], "search_filter": False}
     hidden = configuration["semantic_types"][0]["id"]
-    type_filter = model_properties(configuration)["file_annotations"]["items"]["properties"]["semantic_types"]["items"]
-    assert type_filter["facet-def"]["exclude"] == [hidden]
-    assert "exclude" not in model_properties(load_configuration(TEST_CONFIG))["file_annotations"]["items"][
-        "properties"
-    ]["semantic_types"]["items"]["facet-def"]
+
+    def type_filter(properties):
+        return properties["pgd_file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
+
+    assert type_filter(model_properties(configuration))["exclude"] == [hidden]
+    assert "exclude" not in type_filter(model_properties(load_configuration(TEST_CONFIG)))

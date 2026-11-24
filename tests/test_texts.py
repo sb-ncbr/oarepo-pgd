@@ -59,7 +59,7 @@ def test_the_configuration_accepts_texts_in_several_languages(tmp_path):
 
 def test_the_check_reports_configured_texts_in_one_language(tmp_path):
     configuration = bilingual_configuration(tmp_path)
-    metadata = {"deposition_profile": {"id": "transcribed-interview", "revision": "1"}, "file_annotations": []}
+    metadata = {"pgd_deposition_profile": {"id": "transcribed-interview", "revision": "1"}, "pgd_file_annotations": []}
     assert check_deposit(metadata, [], configuration) == ["Transcripts: 0 of at least 1 file. Provide a transcript."]
 
 

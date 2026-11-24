@@ -13,14 +13,14 @@ class FakeRecord(dict):
     """A record as the component sees it: a mapping with a file manager."""
 
     def __init__(self, annotations, file_keys=(), enabled=True):
-        super().__init__({"metadata": {"file_annotations": annotations}})
+        super().__init__({"metadata": {"pgd_file_annotations": annotations}})
         self.files = SimpleNamespace(enabled=enabled, entries=dict.fromkeys(file_keys))
 
 
 def published(record):
     """Run the component as publication does, once the record has its metadata and files."""
     PublishedFileAnnotationsComponent(service=None).publish(None, draft=FakeRecord([]), record=record)
-    return record["metadata"]["file_annotations"]
+    return record["metadata"]["pgd_file_annotations"]
 
 
 def test_annotations_of_absent_files_are_left_out():
