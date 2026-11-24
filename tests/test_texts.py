@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 import yaml
 
@@ -74,4 +72,7 @@ def test_an_empty_text_mapping_is_refused(tmp_path):
 
 def test_filter_labels_follow_the_language():
     labels = ConfigurationLabels({"interview-transcript": TRANSCRIPT})
-    assert labels(["interview-transcript", "unknown"]) == {"interview-transcript": "Interview transcript", "unknown": "unknown"}
+    assert labels(["interview-transcript", "unknown"]) == {
+        "interview-transcript": "Interview transcript",
+        "unknown": "unknown",
+    }

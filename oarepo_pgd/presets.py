@@ -94,7 +94,8 @@ def model_properties(configuration: dict[str, Any]) -> dict[str, Any]:
     }
     hidden = [item["id"] for item in configuration["semantic_types"] if item.get("search_filter") is False]
     if hidden:
-        properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]["exclude"] = hidden
+        type_filter = properties["file_annotations"]["items"]["properties"]["semantic_types"]["items"]["facet-def"]
+        type_filter["exclude"] = hidden
     return properties
 
 
