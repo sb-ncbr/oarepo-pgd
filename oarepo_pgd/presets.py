@@ -35,6 +35,7 @@ from .texts import ConfigurationLabels
 PROPERTIES = {
     "deposition_profile": {
         "type": "object",
+        "label": {"en": "Deposition profile", "cs": "Depoziční profil"},
         "properties": {
             "id": {"type": "keyword"},
             "revision": {"type": "keyword", "searchable": False},
@@ -42,6 +43,8 @@ PROPERTIES = {
     },
     "file_annotations": {
         "type": "array",
+        # Shown with the server's messages in the form's error summary.
+        "label": {"en": "File meanings", "cs": "Významy souborů"},
         "items": {
             "type": "object",
             "properties": {

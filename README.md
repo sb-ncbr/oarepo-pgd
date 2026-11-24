@@ -112,7 +112,7 @@ In the short form `{en: ..., cs: ...}`, quote a text that contains a comma, or w
 
 ## Deposit form: standard and custom
 
-**Standard form.** For a repository with the generated tabbed deposit form (`useWizardForm`), the plugin registers two overrides for each model's deposit pages: the tabbed form, whose files section it wraps, and the publish button. The files tab is renamed "Files and meanings" and shows an error badge when the server reports a profile problem. Nothing needs to be added to the host's JavaScript.
+**Standard form.** For a repository with the generated tabbed deposit form (`useWizardForm`), the plugin registers two overrides for each model's deposit pages: the tabbed form, whose files section it wraps, and the publish button. The files tab is renamed "Files and meanings" and shows an error badge when the server reports a profile problem; the form's error summary lists the messages under **File meanings**. Nothing needs to be added to the host's JavaScript.
 
 **Custom forms.** A host with its own deposit form switches the automatic overrides off in `invenio.cfg` and mounts the two components itself:
 
