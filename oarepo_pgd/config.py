@@ -4,7 +4,8 @@ Semantic types are read from every YAML file (``*.yaml`` or ``*.yml``) in
 ``<directory>/semantic-types/`` (each file holds a list) and deposition profiles
 from every YAML file in ``<directory>/profiles/`` (one profile per file). Files
 are read in name order. A folder or file that cannot be read, or a file that
-cannot be parsed, is reported with the other problems.
+cannot be parsed or repeats a key within a mapping, is reported with the other
+problems.
 """
 
 from __future__ import annotations
@@ -19,6 +20,44 @@ from .config_schema import PROFILE, SEMANTIC_TYPES, ConfigurationSchema, problem
 from .profiles import Configuration, Profile, SemanticType
 
 YAML_SUFFIXES = (".yaml", ".yml")
+
+
+class UniqueKeyLoader(yaml.SafeLoader):
+    """A safe YAML loader that refuses a key repeated within one mapping.
+
+    YAML requires unique keys, but PyYAML keeps the last value, so a second
+    ``requirements:`` would silently replace the first. The check runs on the
+    mappings as written, before PyYAML resolves ``<<`` merges by rewriting them:
+    a mapping may hold one ``<<``, and its own keys may override merged values.
+    """
+
+    def construct_document(self, node: yaml.Node) -> Any:
+        """Check every mapping of the document, then construct it."""
+        _check_unique_keys(node, set())
+        return super().construct_document(node)
+
+
+def _check_unique_keys(node: yaml.Node, checked: set[int]) -> None:
+    # An alias refers to a node already in the tree, which is checked once.
+    if id(node) in checked:
+        return
+    checked.add(id(node))
+    if isinstance(node, yaml.MappingNode):
+        keys = set()
+        for key_node, value_node in node.value:
+            # Scalar keys are compared as written, with their resolved tag; "<<" is a key like any other here.
+            key = (key_node.tag, key_node.value) if isinstance(key_node, yaml.ScalarNode) else key_node
+            if key in keys:
+                raise yaml.constructor.ConstructorError(
+                    problem=f"line {key_node.start_mark.line + 1}: the key {key_node.value!r} appears more than once "
+                    "in this mapping"
+                )
+            keys.add(key)
+            _check_unique_keys(key_node, checked)
+            _check_unique_keys(value_node, checked)
+    elif isinstance(node, yaml.SequenceNode):
+        for item in node.value:
+            _check_unique_keys(item, checked)
 
 
 class ConfigurationError(Exception):
@@ -80,7 +119,8 @@ def _read_files(directory: Path, folder: str, content: fields.Field, found: list
             found.append(f"{source}: file: The file cannot be read: {error}")
             continue
         try:
-            data = yaml.safe_load(text)
+            # UniqueKeyLoader is a SafeLoader.
+            data = yaml.load(text, Loader=UniqueKeyLoader)
         except yaml.YAMLError as error:
             found.append(f"{source}: {error}")
             continue

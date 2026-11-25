@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from oarepo_pgd.config import ConfigurationError, load_configuration, parse_configuration
+from oarepo_pgd.config import ConfigurationError, UniqueKeyLoader, load_configuration, parse_configuration
 from oarepo_pgd.profiles import Configuration
 
 TEST_CONFIG = Path(__file__).parent / "config"
@@ -66,6 +66,53 @@ def test_a_file_that_cannot_be_read_is_reported_with_the_other_problems(tmp_path
     assert "profiles/latin-1.yaml: file: The file cannot be read:" in text
     assert "profiles/folder.yml: file: The file cannot be read:" in text
     assert "profiles/profile-0.yaml: min_file: Unknown field." in text
+
+
+def test_a_repeated_key_is_reported_with_its_line(tmp_path):
+    write(tmp_path)
+    # A second requirements key would otherwise silently drop the required photos.
+    (tmp_path / "profiles" / "repeated.yaml").write_text(yaml.safe_dump(profile(id="repeated")) + "requirements: []\n")
+    (tmp_path / "semantic-types" / "nested.yaml").write_text(
+        "- id: map\n  label: Map\n  definition: A map.\n  label: Plan\n"
+    )
+    text = problems(tmp_path)
+    lines = (tmp_path / "profiles" / "repeated.yaml").read_text().splitlines()
+    assert f"profiles/repeated.yaml: line {len(lines)}: the key 'requirements' appears more than once" in text
+    assert "semantic-types/nested.yaml: line 4: the key 'label' appears more than once" in text
+
+
+def test_a_key_may_override_a_merged_value(tmp_path):
+    write(tmp_path, types=[])
+    (tmp_path / "semantic-types" / "types.yaml").write_text(
+        "- &photo {id: site-photo, label: Site photo, definition: A photograph.}\n"
+        "- <<: *photo\n  id: field-notebook\n  label: Field notebook\n"
+    )
+    assert [item.id for item in load_configuration(tmp_path).semantic_types] == ["site-photo", "field-notebook"]
+
+
+def yaml_problem(text):
+    with pytest.raises(yaml.YAMLError) as error:
+        yaml.load(text, Loader=UniqueKeyLoader)
+    return str(error.value)
+
+
+def test_a_repeated_key_inside_a_merged_mapping_is_reported():
+    assert "line 2: the key 'requirements' appears more than once" in yaml_problem(
+        "a:\n  <<: {requirements: [photo], requirements: []}\n"
+    )
+
+
+def test_a_second_merge_key_is_reported():
+    assert "line 5: the key '<<' appears more than once" in yaml_problem(
+        "x: &x {a: 1}\ny: &y {b: 2}\nz:\n  <<: *x\n  <<: *y\n"
+    )
+
+
+def test_an_override_stays_valid_when_its_mapping_is_merged_and_reused():
+    # PyYAML rewrites a merged mapping in place; the check sees the mapping as written.
+    text = "base: &base {en: Photos, cs: Fotky}\nfirst:\n  <<: &label {<<: *base, en: Pictures}\nsecond: *label\n"
+    loaded = yaml.load(text, Loader=UniqueKeyLoader)
+    assert loaded["first"] == loaded["second"] == {"en": "Pictures", "cs": "Fotky"}
 
 
 def test_a_folder_that_cannot_be_listed_is_reported(tmp_path, monkeypatch):
