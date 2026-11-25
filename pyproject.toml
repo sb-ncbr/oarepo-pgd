@@ -1,10 +1,10 @@
 [project]
 name = "oarepo-pgd"
-version = "0.3.1"
+version = "0.4.0"
 description = "Profile-guided deposition for CESNET Invenio (OARepo) repositories."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.14,<3.15"
+requires-python = ">=3.14"
 # Tested with oarepo-app 8 (OARepo 14.2, InvenioRDM 14).
 dependencies = [
     "oarepo-model>=7.0.0,<8.0.0",

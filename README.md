@@ -13,7 +13,13 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 1. Add the package:
 
    ```sh
-   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.3.1
+   uv add git+https://github.com/sb-ncbr/oarepo-pgd --tag v0.4.0
+   ```
+
+   To work on the plugin itself, add a local checkout instead. The repository runner adds it in editable mode and upgrades the repository:
+
+   ```sh
+   ./run.sh local add ../oarepo-pgd
    ```
 
 2. Enable it on a model, in `models/<model>/model.py`:
