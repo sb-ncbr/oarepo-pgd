@@ -132,6 +132,27 @@ OAREPO_PGD_UI_OVERRIDES = False
 
   It must be inside the form's Formik, Redux and form-config context, as the standard sections are. Showing server errors for `metadata.pgd_deposition_profile` and `metadata.pgd_file_annotations` next to the files is then the form's own task.
 
+**Restyling parts of the controls.** From version 0.4.0, four parts of the profile controls are overridable components, in the standard and in custom forms. Their IDs start with the form's prefix: the model's application id with a capital letter, followed by `.Form`, for example `Datasets.Form`.
+
+| ID | Component | Props |
+|---|---|---|
+| `<prefix>.ProfileFields.ProfileSelector` | `ProfileSelector` | `profiles`, `value` (the selected profile's id or `""`), `onChange(id)` |
+| `<prefix>.ProfileFields.RequirementCards` | `RequirementCards` | `profile`, `types` (semantic types by id, a `Map`), `counts` (file count by requirement id) |
+| `<prefix>.ProfileFields.FileAssignments` | `FileAssignments` | `configuration`, `profile`, `types`, `keys` (the uploaded files), `annotations`, `errors`, `onAnnotationChange(key, changes)` |
+| `<prefix>.ProfileFields.SemanticDefinitions` | `SemanticDefinitions` | `semanticTypes` |
+
+A replacement receives the same props as the plugin's component. The plugin computes the counts and errors, and `onAnnotationChange` merges the changed fields, such as `description` or the full `semantic_types` list, into the file's annotation in the form. The plugin's components are exported from `@js/oarepo_pgd`, so a replacement can also wrap one. Register a replacement for both deposit pages, for example in the `ui_overrides` function of `ui/<model>/__init__.py`:
+
+```python
+from oarepo_ui.overrides import UIComponent, UIComponentOverride
+
+cards = UIComponent("MyRequirementCards", "@js/datasets/forms/MyRequirementCards")
+for page in ("deposit_create", "deposit_edit"):
+    app.config["OAREPO_UI_OVERRIDES"].add(
+        UIComponentOverride(f"datasets_ui.{page}", "Datasets.Form.ProfileFields.RequirementCards", cards)
+    )
+```
+
 ## Tests
 
 ```sh

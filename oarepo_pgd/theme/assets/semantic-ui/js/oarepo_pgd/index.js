@@ -5,7 +5,11 @@
 //
 //   import { withProfiles } from "@js/oarepo_pgd";
 //   const sections = withProfiles(RDMCompleteSections);
+export { FileAssignments } from "./FileAssignments";
 export { ProfileFields } from "./ProfileFields";
+export { ProfileSelector } from "./ProfileSelector";
+export { RequirementCards } from "./RequirementCards";
+export { SemanticDefinitions } from "./SemanticDefinitions";
 export { useDepositionCheck } from "./hooks";
 export { checkDeposit, countNotation, suggestType } from "./logic.mjs";
 export { withProfiles } from "./sections";

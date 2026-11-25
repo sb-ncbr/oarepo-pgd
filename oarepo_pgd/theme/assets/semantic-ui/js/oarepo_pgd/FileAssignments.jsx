@@ -8,13 +8,8 @@ const t = (message, params) => i18next.t(message, params);
 const sentence = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /** One row per uploaded file to describe it and assign its meanings. */
-export function FileAssignments({ configuration, profile, types, keys, annotations, errors, setAnnotations }) {
+export function FileAssignments({ configuration, profile, types, keys, annotations, errors, onAnnotationChange }) {
   const permitted = new Set(profile.semantic_types.map((type) => type.id));
-
-  function changeAnnotation(key, changes) {
-    const existing = annotations.find((item) => item.file_key === key);
-    setAnnotations([...annotations.filter((item) => item.file_key !== key), { file_key: key, ...existing, ...changes }]);
-  }
 
   return (
     <>
@@ -44,7 +39,7 @@ export function FileAssignments({ configuration, profile, types, keys, annotatio
                       label={describe ? t("Description (required)") : t("Description (optional)")}
                       aria-label={t("{{file}} description", { file: key })}
                       value={annotation.description ?? ""}
-                      onChange={(event) => changeAnnotation(key, { description: event.target.value })}
+                      onChange={(event) => onAnnotationChange(key, { description: event.target.value })}
                     />
                     {alerts.length > 0 && (
                       <Message negative size="small" role="alert">
@@ -64,7 +59,7 @@ export function FileAssignments({ configuration, profile, types, keys, annotatio
                           // A toggle button reports its state through aria-pressed.
                           <Button key={type.id} type="button" size="small" compact toggle className="mb-5" title={type.definition}
                             active={assigned.includes(type.id)}
-                            onClick={() => changeAnnotation(key, {
+                            onClick={() => onAnnotationChange(key, {
                               semantic_types: assigned.includes(type.id)
                                 ? assigned.filter((id) => id !== type.id)
                                 : [...assigned, type.id],
@@ -74,7 +69,7 @@ export function FileAssignments({ configuration, profile, types, keys, annotatio
                         ))}
                       {assigned.filter((id) => !types.has(id)).map((id) => (
                         <Button key={id} type="button" size="small" compact basic negative className="mb-5"
-                          onClick={() => changeAnnotation(key, { semantic_types: assigned.filter((other) => other !== id) })}>
+                          onClick={() => onAnnotationChange(key, { semantic_types: assigned.filter((other) => other !== id) })}>
                           {t("Remove unknown type: {{type}}", { type: id })}
                         </Button>
                       ))}
@@ -97,5 +92,5 @@ FileAssignments.propTypes = {
   keys: PropTypes.arrayOf(PropTypes.string).isRequired,
   annotations: PropTypes.array.isRequired,
   errors: PropTypes.array.isRequired,
-  setAnnotations: PropTypes.func.isRequired,
+  onAnnotationChange: PropTypes.func.isRequired,
 };

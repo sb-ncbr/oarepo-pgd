@@ -164,6 +164,33 @@ export function reconcileAnnotations(annotations, { deleted = [], keys = [], pro
   return [...kept, ...suggestions];
 }
 
+/**
+ * The annotations with one file's annotation changed.
+ *
+ * Merges `changes` into the file's first annotation, keeping its other fields
+ * and its place in the list, and drops any later annotations of the same file,
+ * so an edit also repairs a duplicate. A file without an annotation gets one.
+ * The annotation always stays under `key`, whatever `changes` contains.
+ */
+export function updateAnnotation(annotations, key, changes) {
+  const first = annotations.findIndex((item) => item.file_key === key);
+  if (first < 0) return [...annotations, { ...changes, file_key: key }];
+  return annotations.flatMap((item, index) => {
+    if (item.file_key !== key) return [item];
+    return index === first ? [{ ...item, ...changes, file_key: key }] : [];
+  });
+}
+
+/**
+ * The `onAnnotationChange(key, changes)` callback of the assignments table.
+ *
+ * Each edit starts from `current()`, the annotations as last written, so
+ * several edits in one event, before the form re-renders, all apply.
+ */
+export function annotationEditor(current, write) {
+  return (key, changes) => write(updateAnnotation(current(), key, changes));
+}
+
 /** The errors for one file, each distinct message once, with a stable key for rendering. */
 export function fileAlerts(errors, key) {
   const alerts = new Map();

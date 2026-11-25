@@ -1,25 +1,45 @@
 import React, { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { useFormikContext } from "formik";
-import { Form, Message } from "semantic-ui-react";
+import Overridable from "react-overridable";
+import { buildUID } from "react-searchkit";
+import { Message } from "semantic-ui-react";
+import { useFormConfig } from "@js/oarepo_ui/forms";
 import { useDepositionCheck } from "./hooks";
 import { i18next } from "@translations/oarepo_pgd";
 import { FileAssignments } from "./FileAssignments";
-import { reconcileAnnotations } from "./logic.mjs";
+import { annotationEditor, reconcileAnnotations } from "./logic.mjs";
+import { ProfileSelector } from "./ProfileSelector";
 import { RequirementCards } from "./RequirementCards";
+import { SemanticDefinitions } from "./SemanticDefinitions";
 
 const t = (message, params) => i18next.t(message, params);
 
-/** Files section with profile selection, requirement cards and file meanings around the standard uploader. */
+/**
+ * Files section with profile selection, requirement cards and file meanings around the standard uploader.
+ *
+ * The four parts are overridable under the form's prefix, e.g. `Datasets.Form.ProfileFields.RequirementCards`.
+ * A replacement receives the same props as the plugin's component, so it changes the markup and keeps the logic.
+ */
 export function ProfileFields({ record, uploader }) {
   const { setFieldValue } = useFormikContext();
+  const { overridableIdPrefix } = useFormConfig();
+  const uid = (part) => buildUID(overridableIdPrefix, `ProfileFields.${part}`);
   const { configuration, metadata, filesEnabled, present, keys, result } = useDepositionCheck(record);
   const selected = metadata.pgd_deposition_profile;
   const annotations = metadata.pgd_file_annotations ?? [];
   const profile = configuration?.profiles.find(
     (item) => item.id === selected?.id && item.revision === selected?.revision,
   );
-  const setAnnotations = (value) => setFieldValue("metadata.pgd_file_annotations", value);
+  // The form's values change only on its next render, so writes also go to a
+  // ref; successive edits in one event then build on each other.
+  const latest = useRef(annotations);
+  latest.current = annotations;
+  const setAnnotations = (value) => {
+    latest.current = value;
+    setFieldValue("metadata.pgd_file_annotations", value);
+  };
+  const onAnnotationChange = annotationEditor(() => latest.current, setAnnotations);
 
   // One owner for automatic annotation changes: drop annotations of files
   // deleted in this session and suggest meanings for new uploads, as one write.
@@ -31,8 +51,8 @@ export function ProfileFields({ record, uploader }) {
     const deleted = [...seen.current].filter((key) => !present.has(key));
     keys.forEach((key) => seen.current.add(key));
     deleted.forEach((key) => seen.current.delete(key));
-    const next = reconcileAnnotations(annotations, { deleted, keys, profile });
-    if (next !== annotations) setAnnotations(next);
+    const next = reconcileAnnotations(latest.current, { deleted, keys, profile });
+    if (next !== latest.current) setAnnotations(next);
   }, [[...present].join("\0"), keys.join("\0"), annotations, profile]);
 
   if (!filesEnabled || (configuration && !configuration.profiles.length)) return uploader;
@@ -53,47 +73,41 @@ export function ProfileFields({ record, uploader }) {
     <section className="profile-guided">
       <h2>{t("Describe files with a profile")}</h2>
       <p>{t("Choose a deposition profile, upload your files, and review their meanings. You can save your draft and continue later.")}</p>
-      <Form.Dropdown
-        // The dropdown is not a native control, so the label names it by reference.
-        label={{ id: "deposition-profile-label", children: t("Deposition profile") }}
-        aria-labelledby="deposition-profile-label"
-        // Shown while nothing is selected; an empty value displays no option text.
-        placeholder={t("Select a profile")}
-        selection
-        // Leaving the field must not select the highlighted profile.
-        selectOnBlur={false}
-        options={[
-          // An empty choice, so the profile can be cleared from the keyboard.
-          { key: "", value: "", text: t("Select a profile") },
-          ...configuration.profiles.map((item) => ({ key: item.id, value: item.id, text: item.dataset_category })),
-        ]}
-        value={profile?.id ?? ""}
-        onChange={(event, { value }) => {
-          const choice = configuration.profiles.find((item) => item.id === value);
-          setFieldValue("metadata.pgd_deposition_profile", choice ? { id: choice.id, revision: choice.revision } : {});
-        }}
-      />
+      <Overridable id={uid("ProfileSelector")}>
+        <ProfileSelector
+          profiles={configuration.profiles}
+          value={profile?.id ?? ""}
+          onChange={(value) => {
+            const choice = configuration.profiles.find((item) => item.id === value);
+            setFieldValue("metadata.pgd_deposition_profile", choice ? { id: choice.id, revision: choice.revision } : {});
+          }}
+        />
+      </Overridable>
       {selected?.id && !profile && (
         <Message negative role="alert">
           {t("This draft uses a profile version that is no longer available. Select a profile and review the file meanings.")}
         </Message>
       )}
 
-      {profile && <RequirementCards profile={profile} types={types} counts={result.counts} />}
+      {profile && (
+        <Overridable id={uid("RequirementCards")}>
+          <RequirementCards profile={profile} types={types} counts={result.counts} />
+        </Overridable>
+      )}
 
       <h3 className="rel-mt-2">{t("Upload files")}</h3>
       {uploader}
 
       {profile && (
         <>
-          <FileAssignments configuration={configuration} profile={profile} types={types} keys={keys}
-            annotations={annotations} errors={result.errors} setAnnotations={setAnnotations} />
-          <details className="rel-mt-1 rel-mb-1">
-            <summary>{t("Semantic definitions")}</summary>
-            {configuration.semantic_types.map((type) => (
-              <p key={type.id}><strong>{type.label}: </strong>{type.definition}</p>
-            ))}
-          </details>
+          <Overridable id={uid("FileAssignments")}>
+            <FileAssignments configuration={configuration} profile={profile} types={types} keys={keys}
+              annotations={annotations} errors={result.errors}
+              onAnnotationChange={onAnnotationChange} />
+          </Overridable>
+          <Overridable id={uid("SemanticDefinitions")}>
+            <SemanticDefinitions semanticTypes={configuration.semantic_types} />
+          </Overridable>
         </>
       )}
     </section>
