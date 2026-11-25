@@ -17,7 +17,7 @@ import yaml
 from marshmallow import ValidationError, fields
 
 from .config_schema import PROFILE, SEMANTIC_TYPES, ConfigurationSchema, problems
-from .profiles import Configuration, Profile, SemanticType
+from .profiles import Configuration, Profile, Requirement, SemanticType
 
 YAML_SUFFIXES = (".yaml", ".yml")
 
@@ -172,4 +172,33 @@ def _check_references(semantic_types: list[tuple[str, SemanticType]], profiles: 
                 problems.append(f"{source}: {name} is recommended, so min_files must be at least 1")
             if requirement.max_files is not None and requirement.max_files < requirement.min_files:
                 problems.append(f"{source}: {name} has max_files below min_files")
+        problems.extend(f"{source}: {problem}" for problem in _contradictory_counts(profile.requirements))
+    return problems
+
+
+def _contradictory_counts(requirements: tuple[Requirement, ...]) -> list[str]:
+    """Requirements over the same meanings whose counts no deposit can meet together.
+
+    Such requirements count the same files. A count above ``max_files`` is an
+    error at every level and a count below ``min_files`` one for a required
+    requirement, so a required minimum above another requirement's maximum
+    blocks every deposit.
+    """
+    groups: dict[frozenset[str], list[Requirement]] = {}
+    for requirement in requirements:
+        groups.setdefault(frozenset(requirement.semantic_types), []).append(requirement)
+    problems = []
+    for group in groups.values():
+        capped = [item for item in group if item.max_files is not None]
+        required = [item for item in group if item.level == "required"]
+        if not capped or not required:
+            continue
+        lowest = min(capped, key=lambda item: item.max_files)
+        highest = max(required, key=lambda item: item.min_files)
+        # A single requirement with max_files below min_files is reported on its own.
+        if highest is not lowest and highest.min_files > lowest.max_files:
+            problems.append(
+                f"requirement '{highest.id}' needs at least {highest.min_files} files, but requirement "
+                f"'{lowest.id}' allows at most {lowest.max_files} of the same file meanings"
+            )
     return problems

@@ -213,6 +213,29 @@ def test_reports_requirement_problems(tmp_path):
     assert "requirement 'photos' uses semantic type 'drone-video', which the profile does not permit" in text
 
 
+def requirement(id, level, min_files, max_files=None, types=("site-photo",)):
+    data = {"id": id, "label": id, "level": level, "min_files": min_files, "semantic_types": list(types)}
+    return data if max_files is None else {**data, "max_files": max_files}
+
+
+def test_requirements_no_deposit_can_meet_together_are_reported(tmp_path):
+    requirements = [requirement("photos", "required", 2), requirement("cover", "optional", 0, max_files=1)]
+    text = problems(write(tmp_path, profiles=[profile(requirements=requirements)]))
+    assert "requirement 'photos' needs at least 2 files, but requirement 'cover' allows at most 1 of the same" in text
+
+
+@pytest.mark.parametrize("requirements", [
+    # A recommended minimum is only a notice.
+    [requirement("photos", "recommended", 2), requirement("cover", "optional", 0, max_files=1)],
+    # Different meanings count different files.
+    [requirement("photos", "required", 2), requirement("notes", "optional", 0, max_files=1, types=["field-notebook"])],
+    # Counts that a deposit can meet together.
+    [requirement("photos", "required", 1), requirement("cover", "optional", 0, max_files=1)],
+])
+def test_requirements_a_deposit_can_meet_together_are_accepted(tmp_path, requirements):
+    load_configuration(write(tmp_path, profiles=[profile(requirements=requirements)]))
+
+
 def test_values_of_other_yaml_types_are_refused(tmp_path):
     write(tmp_path)
     (tmp_path / "semantic-types" / "binary.yaml").write_text(

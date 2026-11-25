@@ -59,7 +59,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
    - `recommended`: a notice. The form marks the requirement yellow and publication stays open. `min_files` must be at least 1.
    - `optional`: nothing. `min_files` must be 0.
 
-   A count above `max_files` is an error at every level.
+   A count above `max_files` is an error at every level. Requirements over the same semantic types count the same files, so the repository refuses to start if a required `min_files` is above another such requirement's `max_files`.
 
    The full format is defined by the schemas in `oarepo_pgd/config_schema.py`. A mistake in a YAML file, such as a key repeated in one mapping, or a folder or file that cannot be read, stops the repository at startup with a message naming the file. So does a missing configuration directory or a configuration without profiles: an enabled preset needs at least one profile, so deposits are never silently left unchecked. The preset defines the `pgd_deposition_profile` and `pgd_file_annotations` fields itself. The `pgd_` prefix keeps them apart from fields of the model and of other packages; if the model or another package already defines either field, the repository stops at startup and names the field. A definition identical to the one the preset adds, including its search filters, is accepted, so adding the fields a second time changes nothing. The preset itself goes into a model's `presets` once; OARepo refuses it twice.
 
