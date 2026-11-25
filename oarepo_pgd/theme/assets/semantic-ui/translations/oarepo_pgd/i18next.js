@@ -1,15 +1,15 @@
-// The plugin's own i18next instance, set up like those of the OARepo packages:
-// the language comes from the page's <html lang>, English is the fallback, and
-// keys are the English texts.
+// The plugin's own i18next instance: the language comes from the page's
+// <html lang>, English is the fallback, and keys are the English texts.
+// It stays private: the plugin's components call its t() directly, and it is
+// not registered with react-i18next, whose single default instance belongs to
+// the repository's own texts.
 import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import { initReactI18next } from "react-i18next";
 import { translations } from "./messages";
 
 const i18next = i18n.createInstance();
 i18next
   .use(LanguageDetector)
-  .use(initReactI18next)
   .init({
     // Load the bundled catalogues synchronously, so the first t() calls are translated.
     initImmediate: false,
