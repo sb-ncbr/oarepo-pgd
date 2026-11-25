@@ -139,7 +139,7 @@ def pgd_preset(
                     metadata = deepcopy(collection[name])
                     properties = metadata.setdefault("properties", {})
                     for field in PROPERTIES:
-                        # A definition identical to the preset's own is accepted, so applying it again changes nothing.
+                        # A definition identical to the one added here is accepted: adding the fields twice is harmless.
                         if field in properties and properties[field] != fields[field]:
                             raise ValueError(
                                 f"{model.name}: metadata field {field!r} is already defined, by the model or by "
