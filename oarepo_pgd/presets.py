@@ -107,7 +107,15 @@ def pgd_preset(
         when it differs from the model name.
     """
     origin = Path(origin)
+    # A mistyped directory must not fall back to the configuration next to it.
+    if not origin.exists():
+        raise ConfigurationError(f"No deposition configuration found: {origin} does not exist.")
     config_directory = origin if origin.is_dir() else origin.parent / directory
+    if not config_directory.is_dir():
+        raise ConfigurationError(
+            f"No deposition configuration found: {config_directory} is not a directory. "
+            "Put the semantic types and profiles there, or name another directory with directory=."
+        )
     configuration = load_configuration(config_directory)
     # An enabled preset without profiles would leave deposits unchecked, so a
     # misplaced configuration must stop the repository instead.

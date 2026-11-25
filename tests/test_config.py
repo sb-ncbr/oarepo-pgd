@@ -49,6 +49,45 @@ def test_loads_all_files_in_name_order():
     assert [item.id for item in configuration.profiles] == ["field-survey", "photo-only"]
 
 
+def test_yml_files_are_read_with_yaml_files_in_name_order(tmp_path):
+    write(tmp_path, profiles=[])
+    (tmp_path / "profiles" / "b.yaml").write_text(yaml.safe_dump(profile(id="second")))
+    (tmp_path / "profiles" / "a.yml").write_text(yaml.safe_dump(profile(id="first")))
+    (tmp_path / "profiles" / "notes.txt").write_text("not configuration")
+    (tmp_path / "profiles" / ".yaml").write_text(yaml.safe_dump(profile(id="nameless")))
+    assert [item.id for item in load_configuration(tmp_path).profiles] == ["nameless", "first", "second"]
+
+
+def test_a_file_that_cannot_be_read_is_reported_with_the_other_problems(tmp_path):
+    write(tmp_path, profiles=[profile(min_file=1)])
+    (tmp_path / "profiles" / "latin-1.yaml").write_bytes("dataset_category: Pr\xfczkum\n".encode("latin-1"))
+    (tmp_path / "profiles" / "folder.yml").mkdir()
+    text = problems(tmp_path)
+    assert "profiles/latin-1.yaml: file: The file cannot be read:" in text
+    assert "profiles/folder.yml: file: The file cannot be read:" in text
+    assert "profiles/profile-0.yaml: min_file: Unknown field." in text
+
+
+def test_a_folder_that_cannot_be_listed_is_reported(tmp_path, monkeypatch):
+    write(tmp_path)
+    listing = Path.iterdir
+
+    def iterdir(path):
+        if path.name == "profiles":
+            raise PermissionError(13, "Permission denied", str(path))
+        return listing(path)
+
+    monkeypatch.setattr(Path, "iterdir", iterdir)
+    assert "profiles: folder: The folder cannot be read: [Errno 13] Permission denied" in problems(tmp_path)
+
+
+def test_a_file_in_place_of_a_folder_is_reported(tmp_path):
+    write(tmp_path, profiles=[])
+    (tmp_path / "profiles").rmdir()
+    (tmp_path / "profiles").write_text("")
+    assert "profiles: folder: The folder cannot be read:" in problems(tmp_path)
+
+
 def test_missing_folders_give_an_empty_configuration(tmp_path):
     assert load_configuration(tmp_path) == Configuration()
 

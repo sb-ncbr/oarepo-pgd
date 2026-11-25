@@ -32,7 +32,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
      definition: A written transcription of an interview session.
    ```
 
-   Profiles go in `models/<model>/config/profiles/*.yaml`, one profile per file:
+   Profiles go in `models/<model>/config/profiles/*.yaml`, one profile per file (from version 0.4.0, `.yml` files are read too):
 
    ```yaml
    id: transcribed-interview
@@ -59,7 +59,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 
    A count above `max_files` is an error at every level.
 
-   The full format is defined by the schemas in `oarepo_pgd/config_schema.py`. A mistake in a YAML file stops the repository at startup with a message naming the file. So does a missing configuration: an enabled preset needs at least one profile, so deposits are never silently left unchecked. The preset defines the `pgd_deposition_profile` and `pgd_file_annotations` fields itself. The `pgd_` prefix keeps them apart from fields of the model and of other packages; if either name is already defined differently, the repository stops at startup and names the field.
+   The full format is defined by the schemas in `oarepo_pgd/config_schema.py`. A mistake in a YAML file, or a folder or file that cannot be read, stops the repository at startup with a message naming the file. So does a missing configuration directory or a configuration without profiles: an enabled preset needs at least one profile, so deposits are never silently left unchecked. The preset defines the `pgd_deposition_profile` and `pgd_file_annotations` fields itself. The `pgd_` prefix keeps them apart from fields of the model and of other packages; if either name is already defined differently, the repository stops at startup and names the field.
 
 4. Give the deposit form the configuration: add the plugin's component to the `components` list of the model's UI resource config class, in `ui/<model>/__init__.py`, after the entries already there:
 

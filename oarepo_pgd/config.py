@@ -1,8 +1,10 @@
 """Load and validate a model's deposition configuration.
 
-Semantic types are read from every ``*.yaml`` file in ``<directory>/semantic-types/``
-(each file holds a list) and deposition profiles from every ``*.yaml`` file in
-``<directory>/profiles/`` (one profile per file). Files are read in name order.
+Semantic types are read from every YAML file (``*.yaml`` or ``*.yml``) in
+``<directory>/semantic-types/`` (each file holds a list) and deposition profiles
+from every YAML file in ``<directory>/profiles/`` (one profile per file). Files
+are read in name order. A folder or file that cannot be read, or a file that
+cannot be parsed, is reported with the other problems.
 """
 
 from __future__ import annotations
@@ -15,6 +17,8 @@ from marshmallow import ValidationError, fields
 
 from .config_schema import PROFILE, SEMANTIC_TYPES, ConfigurationSchema, problems
 from .profiles import Configuration, Profile, SemanticType
+
+YAML_SUFFIXES = (".yaml", ".yml")
 
 
 class ConfigurationError(Exception):
@@ -60,10 +64,23 @@ def parse_configuration(data: dict[str, Any]) -> Configuration:
 
 def _read_files(directory: Path, folder: str, content: fields.Field, found: list[str]) -> list[tuple[str, Any]]:
     results = []
-    for path in sorted((directory / folder).glob("*.yaml")):
+    try:
+        paths = sorted(path for path in (directory / folder).iterdir() if path.name.lower().endswith(YAML_SUFFIXES))
+    except FileNotFoundError:
+        # A missing folder is an empty one; the preset refuses a configuration without profiles.
+        return results
+    except OSError as error:
+        found.append(f"{folder}: folder: The folder cannot be read: {error}")
+        return results
+    for path in paths:
         source = f"{folder}/{path.name}"
         try:
-            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as error:
+            found.append(f"{source}: file: The file cannot be read: {error}")
+            continue
+        try:
+            data = yaml.safe_load(text)
         except yaml.YAMLError as error:
             found.append(f"{source}: {error}")
             continue

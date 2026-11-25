@@ -1,3 +1,4 @@
+import shutil
 from copy import deepcopy
 from dataclasses import replace
 from pathlib import Path
@@ -23,8 +24,20 @@ def add_fields(types, configuration=TEST_CONFIG, name="survey"):
 
 
 def test_missing_configuration_stops_startup(tmp_path):
-    with pytest.raises(ConfigurationError, match="No deposition profiles found"):
+    with pytest.raises(ConfigurationError, match=f"No deposition configuration found: {tmp_path / 'config'} does not"):
         pgd_preset(tmp_path / "config")
+
+
+def test_a_mistyped_directory_does_not_fall_back_to_the_configuration_next_to_it(tmp_path):
+    shutil.copytree(TEST_CONFIG, tmp_path / "config")
+    with pytest.raises(ConfigurationError, match="does not exist"):
+        pgd_preset(tmp_path / "confg")
+
+
+def test_a_model_file_without_a_configuration_directory_stops_startup(tmp_path):
+    (tmp_path / "model.py").write_text("")
+    with pytest.raises(ConfigurationError, match=f"{tmp_path / 'config'} is not a directory"):
+        pgd_preset(tmp_path / "model.py")
 
 
 def test_configuration_without_profiles_stops_startup(tmp_path):
