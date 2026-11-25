@@ -1,7 +1,7 @@
 import { useFormikContext } from "formik";
 import { useSelector } from "react-redux";
 import { useFormConfig } from "@js/oarepo_ui/forms";
-import { checkDeposit } from "./logic.mjs";
+import { checkDeposit, storedKey } from "./logic.mjs";
 
 /**
  * Configuration, uploaded files and the current check result for the deposit form.
@@ -17,7 +17,8 @@ export function useDepositionCheck(record) {
   const entries = Array.isArray(inventory)
     ? inventory
     : Object.entries(inventory).map(([key, value]) => ({ ...value, key }));
-  const name = (file) => file.key ?? file.name;
+  // Annotations name files by the key the repository stores, which the check on the server uses.
+  const name = (file) => storedKey(file.key ?? file.name, file.links);
   // Files still uploading are listed but do not count until they finish.
   const present = new Set(entries.map(name).filter(Boolean));
   const keys = [...new Set(entries.filter((file) => !file.status || ["finished", "completed"].includes(file.status))

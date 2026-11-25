@@ -3,16 +3,38 @@
 // order in step with the server check.
 
 function patternExpression(pattern) {
-  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*");
+  const escaped = pattern.normalize().replace(/[.+?^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*");
   return new RegExp(`^${escaped}$`, "i");
+}
+
+/**
+ * The key under which the repository stores a file the uploader lists as `name`.
+ *
+ * The uploader lists a file uploaded in the open form by the NFC form of its
+ * name, which can differ from the stored key: a browser on macOS may send
+ * "café.txt" with a separate accent. The last part of the file's own link is
+ * the stored key; it is used when it is the same name in another Unicode form.
+ * Files already on the draft are listed by their stored key, which may contain "/".
+ */
+export function storedKey(name, links) {
+  if (!links?.self) return name;
+  let key;
+  try {
+    // The path only: a link may carry a query or fragment.
+    key = decodeURIComponent(new URL(links.self, "https://localhost").pathname.split("/").pop());
+  } catch {
+    return name;
+  }
+  return key && key !== name && key.normalize() === name.normalize() ? key : name;
 }
 
 /** The permitted type whose filename pattern matches most specifically, if exactly one does. */
 export function suggestType(profile, key) {
   const matches = profile.semantic_types.flatMap((type) =>
     (type.filename_patterns ?? [])
-      .filter((pattern) => patternExpression(pattern).test(key))
-      .map((pattern) => ({ type, score: pattern.replaceAll("*", "").length })),
+      // Unicode forms of the same name match the same patterns.
+      .filter((pattern) => patternExpression(pattern).test(key.normalize()))
+      .map((pattern) => ({ type, score: pattern.normalize().replaceAll("*", "").length })),
   );
   if (!matches.length) return undefined;
   const best = Math.max(...matches.map((match) => match.score));
