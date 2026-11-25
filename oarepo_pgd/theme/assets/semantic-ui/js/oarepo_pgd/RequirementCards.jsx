@@ -1,10 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Card, Icon, Label } from "semantic-ui-react";
-import { i18next } from "@translations/oarepo_pgd";
+import { t } from "@translations/oarepo_pgd";
 import { countNotation, requirementState } from "./logic.mjs";
-
-const t = (message, params) => i18next.t(message, params);
 
 const CARD_COLOR = { unmet: "red", advised: "yellow" };
 

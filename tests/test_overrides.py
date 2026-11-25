@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import oarepo_ui.config
 import pytest
 from flask import Flask
+from oarepo_ui.overrides import UIComponent, UIComponentOverride
 
 from oarepo_pgd.components import DepositionProfilesComponent
 from oarepo_pgd.config import ConfigurationError
@@ -119,6 +120,16 @@ def test_a_prefix_no_application_id_gives_points_to_a_custom_form():
 def test_a_host_with_its_own_form_needs_no_matching_ids():
     app = create_app({"samples": registered_model("interviews")}, OAREPO_PGD_UI_OVERRIDES=False)
     assert "deposition_profiles" in form_config(app, "samples", prefix="Default.Form")
+
+
+def test_an_override_the_host_configured_for_the_same_component_wins():
+    own = UIComponent("MyForm", "@js/datasets/forms/MyForm")
+    host = UIComponentOverride("datasets_ui.deposit_create", "Datasets.Form.WizardForm.container", own)
+    app = create_app({"datasets": registered_model("interviews")}, OAREPO_UI_OVERRIDES={host})
+
+    kept = {override.endpoint: override.component for override in app.config["OAREPO_UI_OVERRIDES"]}
+    assert kept["datasets_ui.deposit_create"] is own
+    assert kept["datasets_ui.deposit_edit"].import_name == "ProfileTabForm"
 
 
 def test_overrides_can_be_switched_off():

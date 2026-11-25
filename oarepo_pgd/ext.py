@@ -59,8 +59,6 @@ def finalize_app(app: Flask) -> None:
     """
     if not app.config.get("OAREPO_PGD_UI_OVERRIDES", True):
         return
-    configured = app.config["OAREPO_UI_OVERRIDES"]
-    for override in ui_overrides(profile_models(app)):
-        # An override the host configured for the same component wins.
-        if override not in configured:
-            configured.add(override)
+    # Overrides are equal by endpoint and component id, and a set keeps the element
+    # it already holds, so an override the host configured for the same component wins.
+    app.config["OAREPO_UI_OVERRIDES"].update(ui_overrides(profile_models(app)))

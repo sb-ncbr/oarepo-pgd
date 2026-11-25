@@ -1,8 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { i18next } from "@translations/oarepo_pgd";
-
-const t = (message, params) => i18next.t(message, params);
+import { t } from "@translations/oarepo_pgd";
 
 /** The definitions of the model's semantic types, folded away by default. */
 export function SemanticDefinitions({ semanticTypes }) {

@@ -1,5 +1,5 @@
 import React from "react";
-import { i18next } from "@translations/oarepo_pgd";
+import { t } from "@translations/oarepo_pgd";
 import { ProfileFields } from "./ProfileFields";
 
 const PATHS = ["metadata.pgd_deposition_profile", "metadata.pgd_file_annotations"];
@@ -9,7 +9,7 @@ const PATHS = ["metadata.pgd_deposition_profile", "metadata.pgd_file_annotations
  * The section also takes over the two profile fields, so the form marks its
  * tab when the server reports a profile error.
  */
-export function withProfiles(sections, { label = i18next.t("Files and meanings") } = {}) {
+export function withProfiles(sections, { label = t("Files and meanings") } = {}) {
   return sections.map((section) =>
     section.key === "files"
       ? {

@@ -6,14 +6,12 @@ import { buildUID } from "react-searchkit";
 import { Message } from "semantic-ui-react";
 import { useFormConfig } from "@js/oarepo_ui/forms";
 import { useDepositionCheck } from "./hooks";
-import { i18next } from "@translations/oarepo_pgd";
+import { t } from "@translations/oarepo_pgd";
 import { FileAssignments } from "./FileAssignments";
 import { annotationEditor, reconcileAnnotations } from "./logic.mjs";
 import { ProfileSelector } from "./ProfileSelector";
 import { RequirementCards } from "./RequirementCards";
 import { SemanticDefinitions } from "./SemanticDefinitions";
-
-const t = (message, params) => i18next.t(message, params);
 
 /**
  * Files section with profile selection, requirement cards and file meanings around the standard uploader.

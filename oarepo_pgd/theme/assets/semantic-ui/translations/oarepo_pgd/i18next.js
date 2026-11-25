@@ -23,4 +23,7 @@ i18next
     detection: { order: ["htmlTag"], caches: [] },
   });
 
-export { i18next };
+// Bound to the instance; it follows a change of language.
+const t = i18next.getFixedT(null);
+
+export { i18next, t };

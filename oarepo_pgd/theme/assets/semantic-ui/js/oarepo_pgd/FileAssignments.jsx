@@ -1,10 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Button, Form, Message, Table } from "semantic-ui-react";
-import { i18next } from "@translations/oarepo_pgd";
+import { t } from "@translations/oarepo_pgd";
 import { fileAlerts, messageText } from "./logic.mjs";
 
-const t = (message, params) => i18next.t(message, params);
 const sentence = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /** One row per uploaded file to describe it and assign its meanings. */

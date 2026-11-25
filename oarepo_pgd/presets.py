@@ -24,7 +24,7 @@ from typing import Any
 
 from invenio_i18n import lazy_gettext as _
 from oarepo_model.api import FunctionalPreset
-from oarepo_model.customizations import AddDictionary, AddToList, Customization, PrependMixin
+from oarepo_model.customizations import AddDictionary, AddServiceComponent, AddToList, Customization, PrependMixin
 from oarepo_model.presets import Preset
 
 from .config import ConfigurationError, load_configuration
@@ -161,7 +161,7 @@ def pgd_preset(
 
         def apply(self, builder: Any, model: Any, dependencies: Any) -> Iterator[Customization]:
             yield PrependMixin("RecordSchema", profile_schema_mixin(configuration))
-            yield AddToList("record_service_components", PublishedFileAnnotationsComponent)
+            yield AddServiceComponent(PublishedFileAnnotationsComponent)
             yield AddToList("record_dumper_extensions", FileAnnotationsDumperExt())
             # Read back per app through OAREPO_MODELS; see registry.py.
             yield AddDictionary(

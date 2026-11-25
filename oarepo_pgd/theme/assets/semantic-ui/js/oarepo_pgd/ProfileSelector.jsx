@@ -1,9 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Form } from "semantic-ui-react";
-import { i18next } from "@translations/oarepo_pgd";
-
-const t = (message, params) => i18next.t(message, params);
+import { t } from "@translations/oarepo_pgd";
 
 /** Dropdown of the model's profiles; `value` is the selected profile's id or "". */
 export function ProfileSelector({ profiles, value, onChange }) {
