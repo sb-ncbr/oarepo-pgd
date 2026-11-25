@@ -2,7 +2,9 @@
 
 The record schema runs on draft saves (errors are reported and the draft is
 kept), in ``validate_draft()`` (used by community submission and publish
-requests) and on publication, where any error blocks it.
+requests) and on publication, where any error blocks it. The check counts the
+draft's completed uploads only, as the deposit form does, so a publish request
+cannot count a file that is still uploading.
 
 When the schema dumps a record for a user who may not read its files, it leaves
 out the file annotations: they name and describe the files, which the
@@ -13,11 +15,25 @@ from __future__ import annotations
 
 from typing import Any
 
+from invenio_records_resources.proxies import current_transfer_registry
+from invenio_records_resources.services.files.transfer.base import TransferStatus
 from marshmallow import ValidationError, post_dump, validates_schema
 from marshmallow_utils.context import context_schema
+from oarepo_runtime import current_runtime
 
 from .profiles import Configuration
 from .rules import check_deposit
+
+
+def completed_file_keys(draft: Any) -> list[str]:
+    """The keys of the draft's files whose upload has completed, checked as RDM does before publishing."""
+    service = current_runtime.get_file_service_for_record(draft)
+    return [
+        key
+        for key, file_record in draft.files.entries.items()
+        if current_transfer_registry.get_transfer(record=draft, file_record=file_record, file_service=service).status
+        == TransferStatus.COMPLETED
+    ]
 
 
 def profile_schema_mixin(configuration: Configuration) -> type:
@@ -31,7 +47,7 @@ def profile_schema_mixin(configuration: Configuration) -> type:
                 return
             if not (data.get("files") or {}).get("enabled", draft.files.enabled):
                 return
-            errors = check_deposit(data.get("metadata") or {}, draft.files.entries.keys(), configuration)
+            errors = check_deposit(data.get("metadata") or {}, completed_file_keys(draft), configuration)
             if errors:
                 raise ValidationError({"metadata": {"pgd_file_annotations": errors}})
 
