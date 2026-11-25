@@ -1,3 +1,4 @@
+import re
 import shutil
 from copy import deepcopy
 from dataclasses import replace
@@ -5,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from oarepo_model.datatypes.registry import DataTypeRegistry
 
 from oarepo_pgd.config import ConfigurationError, load_configuration
 from oarepo_pgd.presets import PROPERTIES, model_properties, pgd_preset
@@ -90,6 +92,25 @@ def test_refuses_a_different_existing_definition():
     existing = {"Metadata": {"properties": {"pgd_file_annotations": {"type": "keyword"}}}}
     with pytest.raises(ValueError, match="'pgd_file_annotations' is already defined"):
         add_fields([existing], name="collision")
+
+
+def test_a_composed_model_gets_the_fields_in_the_definition_oarepo_keeps():
+    # Two collections define the metadata type; OARepo's registry keeps the last one.
+    types = add_fields([
+        {"Metadata": {"properties": {"title": {"type": "fulltext"}}}},
+        {"Metadata": {"properties": {"title": {"type": "fulltext"}, "abstract": {"type": "fulltext"}}}},
+    ])
+    registry = DataTypeRegistry()
+    for collection in types:
+        registry.add_types(collection)
+    assert set(registry.types["Metadata"].type_dict["properties"]) == {"title", "abstract", *PROPERTIES}
+
+
+def test_refuses_an_existing_definition_in_the_array_shorthand():
+    existing = {"Metadata": {"properties": {"pgd_file_annotations[]": {"type": "keyword"}}}}
+    message = "'pgd_file_annotations' is already defined (as 'pgd_file_annotations[]')"
+    with pytest.raises(ValueError, match=re.escape(message)):
+        add_fields([existing])
 
 
 def test_a_type_can_stay_out_of_the_file_types_filter():

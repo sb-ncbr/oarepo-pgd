@@ -134,23 +134,24 @@ def pgd_preset(
 
         def before_populate_type_registry(self, model: Any, types: list[dict[str, Any]], **kwargs: Any) -> None:
             name = model.metadata_type or "Metadata"
-            for index, collection in enumerate(types):
-                if name in collection:
-                    metadata = deepcopy(collection[name])
-                    properties = metadata.setdefault("properties", {})
-                    for field in PROPERTIES:
-                        # A definition identical to the one added here is accepted: adding the fields twice is harmless.
-                        if field in properties and properties[field] != fields[field]:
-                            raise ValueError(
-                                f"{model.name}: metadata field {field!r} is already defined, by the model or by "
-                                "another package. oarepo-pgd defines this field itself; remove or rename the other "
-                                "definition."
-                            )
-                    properties.update(deepcopy(fields))
-                    types[index] = {**collection, name: metadata}
-                    break
-            else:
+            # OARepo registers the collections in order, and a later definition of a
+            # type replaces an earlier one, so the fields go into the last definition.
+            index = next((index for index in reversed(range(len(types))) if name in types[index]), None)
+            if index is None:
                 raise ValueError(f"{model.name}: metadata type {name!r} is not among the model's types")
+            metadata = deepcopy(types[index][name])
+            properties = metadata.setdefault("properties", {})
+            for key, definition in properties.items():
+                # "field[]" is OARepo's shorthand for an array field named "field".
+                field = key.removesuffix("[]")
+                # A definition identical to the one added here is accepted: adding the fields twice is harmless.
+                if field in PROPERTIES and (key != field or definition != fields[field]):
+                    raise ValueError(
+                        f"{model.name}: metadata field {field!r} is already defined (as {key!r}), by the model or by "
+                        "another package. oarepo-pgd defines this field itself; remove or rename the other definition."
+                    )
+            properties.update(deepcopy(fields))
+            types[index] = {**types[index], name: metadata}
 
     class DepositionProfileCheck(Preset):
         """Check drafts against the selected profile and keep the configuration on the model."""
