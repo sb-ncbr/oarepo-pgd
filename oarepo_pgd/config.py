@@ -26,38 +26,25 @@ class UniqueKeyLoader(yaml.SafeLoader):
     """A safe YAML loader that refuses a key repeated within one mapping.
 
     YAML requires unique keys, but PyYAML keeps the last value, so a second
-    ``requirements:`` would silently replace the first. The check runs on the
-    mappings as written, before PyYAML resolves ``<<`` merges by rewriting them:
-    a mapping may hold one ``<<``, and its own keys may override merged values.
+    ``requirements:`` would silently replace the first. Each mapping is checked
+    once, as written, when PyYAML composes it; ``<<`` merges are resolved later,
+    so a mapping may hold one ``<<`` and its own keys may override merged values.
     """
 
-    def construct_document(self, node: yaml.Node) -> Any:
-        """Check every mapping of the document, then construct it."""
-        _check_unique_keys(node, set())
-        return super().construct_document(node)
-
-
-def _check_unique_keys(node: yaml.Node, checked: set[int]) -> None:
-    # An alias refers to a node already in the tree, which is checked once.
-    if id(node) in checked:
-        return
-    checked.add(id(node))
-    if isinstance(node, yaml.MappingNode):
+    def compose_mapping_node(self, anchor: str | None) -> yaml.MappingNode:
+        """Compose the mapping and check its keys."""
+        node = super().compose_mapping_node(anchor)
         keys = set()
-        for key_node, value_node in node.value:
+        for key_node, _ in node.value:
             # Scalar keys are compared as written, with their resolved tag; "<<" is a key like any other here.
             key = (key_node.tag, key_node.value) if isinstance(key_node, yaml.ScalarNode) else key_node
             if key in keys:
-                raise yaml.constructor.ConstructorError(
+                raise yaml.composer.ComposerError(
                     problem=f"line {key_node.start_mark.line + 1}: the key {key_node.value!r} appears more than once "
                     "in this mapping"
                 )
             keys.add(key)
-            _check_unique_keys(key_node, checked)
-            _check_unique_keys(value_node, checked)
-    elif isinstance(node, yaml.SequenceNode):
-        for item in node.value:
-            _check_unique_keys(item, checked)
+        return node
 
 
 class ConfigurationError(Exception):
@@ -74,14 +61,7 @@ def load_configuration(directory: str | Path) -> Configuration:
         for item in items
     ]
     profiles = _read_files(directory, "profiles", PROFILE, found)
-    if not found:
-        found = _check_references(semantic_types, profiles)
-    if found:
-        raise ConfigurationError("Invalid deposition configuration:\n" + "\n".join(f"  {p}" for p in found))
-    return Configuration(
-        semantic_types=tuple(item for _, item in semantic_types),
-        profiles=tuple(profile for _, profile in profiles),
-    )
+    return _configuration(semantic_types, profiles, found)
 
 
 def parse_configuration(data: dict[str, Any]) -> Configuration:
@@ -89,16 +69,27 @@ def parse_configuration(data: dict[str, Any]) -> Configuration:
     try:
         loaded = ConfigurationSchema().load(data)
     except ValidationError as error:
-        raise ConfigurationError("Invalid deposition configuration:\n  " + "\n  ".join(problems(error))) from error
+        raise ConfigurationError(_report(problems(error))) from error
     semantic_types = [("semantic_types", item) for item in loaded["semantic_types"]]
     profiles = [("profiles", profile) for profile in loaded["profiles"]]
-    found = _check_references(semantic_types, profiles)
+    return _configuration(semantic_types, profiles, [])
+
+
+def _configuration(
+    semantic_types: list[tuple[str, SemanticType]], profiles: list[tuple[str, Profile]], found: list[str],
+) -> Configuration:
+    """Build the configuration from entries that loaded without problems, after checking their references."""
+    found = found or _check_references(semantic_types, profiles)
     if found:
-        raise ConfigurationError("Invalid deposition configuration:\n" + "\n".join(f"  {p}" for p in found))
+        raise ConfigurationError(_report(found))
     return Configuration(
         semantic_types=tuple(item for _, item in semantic_types),
         profiles=tuple(profile for _, profile in profiles),
     )
+
+
+def _report(found: list[str]) -> str:
+    return "Invalid deposition configuration:\n" + "\n".join(f"  {problem}" for problem in found)
 
 
 def _read_files(directory: Path, folder: str, content: fields.Field, found: list[str]) -> list[tuple[str, Any]]:

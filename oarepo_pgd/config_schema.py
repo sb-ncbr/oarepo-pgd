@@ -71,19 +71,12 @@ class Flag(fields.Field):
         return value
 
 
-class Count(fields.Field):
-    """A whole number of files, at least ``minimum``."""
-
-    default_error_messages = {"invalid": "Must be a whole number of at least {minimum}."}
-
-    def __init__(self, minimum: int, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        self.minimum = minimum
-
-    def _deserialize(self, value: Any, attr: str | None, data: Any, **kwargs: Any) -> int:
-        if isinstance(value, bool) or not isinstance(value, int) or value < self.minimum:
-            raise self.make_error("invalid", minimum=self.minimum)
-        return value
+def count(minimum: int, **kwargs: Any) -> fields.Integer:
+    """A whole number of files, at least ``minimum``; booleans, fractions and strings are refused."""
+    message = f"Must be a whole number of at least {minimum}."
+    return fields.Integer(
+        strict=True, validate=validate.Range(min=minimum, error=message), error_messages={"invalid": message}, **kwargs
+    )
 
 
 def identifier(**kwargs: Any) -> String:
@@ -145,8 +138,8 @@ class RequirementSchema(Schema):
     id = identifier(required=True)
     label = Text(required=True)
     level = String(required=True, validate=validate.OneOf(LEVELS))
-    min_files = Count(0, required=True)
-    max_files = Count(1)
+    min_files = count(0, required=True)
+    max_files = count(1)
     semantic_types = List(identifier(), required=True, validate=[validate.Length(min=1), _distinct])
     help = Text()
 

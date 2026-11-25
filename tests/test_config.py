@@ -236,6 +236,13 @@ def test_requirements_a_deposit_can_meet_together_are_accepted(tmp_path, require
     load_configuration(write(tmp_path, profiles=[profile(requirements=requirements)]))
 
 
+@pytest.mark.parametrize("value", [True, 1.0, 1.5, "1", -1])
+def test_a_file_count_must_be_a_whole_number(tmp_path, value):
+    requirements = [requirement("photos", "required", value)]
+    text = problems(write(tmp_path, profiles=[profile(requirements=requirements)]))
+    assert "requirements.0.min_files: Must be a whole number of at least 0." in text
+
+
 def test_values_of_other_yaml_types_are_refused(tmp_path):
     write(tmp_path)
     (tmp_path / "semantic-types" / "binary.yaml").write_text(
