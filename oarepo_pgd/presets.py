@@ -8,8 +8,9 @@ Add the preset to the model's ``presets`` list::
 
 It reads the YAML configuration from ``config/`` next to the model module, adds
 the ``pgd_deposition_profile`` and ``pgd_file_annotations`` metadata fields, makes
-the record schema check every draft against its selected profile, and publishes
-a record with the annotations of its own files only. An invalid
+the record schema check every draft against its selected profile, publishes
+a record with the annotations of its own files only, and indexes the
+annotations only while anyone may read the record's files. An invalid
 configuration, a configuration without profiles, or a model that already
 defines either field differently from the preset stops the process at startup.
 """
@@ -27,6 +28,7 @@ from oarepo_model.customizations import AddDictionary, AddToList, Customization,
 from oarepo_model.presets import Preset
 
 from .config import ConfigurationError, load_configuration
+from .dumpers import FileAnnotationsDumperExt
 from .profiles import Configuration
 from .registry import NAMESPACE_KEY
 from .schema import profile_schema_mixin
@@ -154,11 +156,12 @@ def pgd_preset(
         """Check drafts against the selected profile and keep the configuration on the model."""
 
         provides = (NAMESPACE_KEY,)
-        modifies = ("RecordSchema", "record_service_components")
+        modifies = ("RecordSchema", "record_service_components", "record_dumper_extensions")
 
         def apply(self, builder: Any, model: Any, dependencies: Any) -> Iterator[Customization]:
             yield PrependMixin("RecordSchema", profile_schema_mixin(configuration))
             yield AddToList("record_service_components", PublishedFileAnnotationsComponent)
+            yield AddToList("record_dumper_extensions", FileAnnotationsDumperExt())
             # Read back per app through OAREPO_MODELS; see registry.py.
             yield AddDictionary(
                 NAMESPACE_KEY, {"configuration": configuration, "application_id": application_id}

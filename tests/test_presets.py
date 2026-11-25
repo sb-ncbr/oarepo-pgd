@@ -55,7 +55,7 @@ def test_adds_the_fields():
 def test_keeps_the_configuration_on_the_model():
     _, check = pgd_preset(TEST_CONFIG, application_id="surveys")
     names = {customization.name: customization for customization in check().apply(None, model(), {})}
-    assert set(names) == {"RecordSchema", "record_service_components", NAMESPACE_KEY}
+    assert set(names) == {"RecordSchema", "record_service_components", "record_dumper_extensions", NAMESPACE_KEY}
     stored = names[NAMESPACE_KEY].default
     assert stored["application_id"] == "surveys"
     assert [profile.id for profile in stored["configuration"].profiles] == ["field-survey", "photo-only"]
