@@ -21,11 +21,11 @@ from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, Any
 
 from flask import current_app
+from invenio_app_rdm.records_ui.views.filters import order_entries
 from oarepo_ui.resources.components import UIResourceComponent
 
 from .config import ConfigurationError
 from .registry import profile_models
-from .rules import annotations_of_files
 
 if TYPE_CHECKING:
     from .profiles import Configuration
@@ -39,27 +39,30 @@ def file_meanings(
 ) -> dict[str, Any] | None:
     """The profile and the meanings of the listed files, as the record page shows them.
 
-    Only files in ``file_keys`` appear, each once, in the order of the
-    annotations. A type missing from the configuration shows its identifier.
+    Only files in ``file_keys`` appear, each once, in that order, with their first
+    annotation. A type missing from the configuration shows its identifier.
     The profile shows its configured name only when the stored revision is the
     configured one; otherwise it shows the stored identifier and revision.
     Returns None when no listed file has an annotation.
     """
-    files = {}
-    for annotation in annotations_of_files(metadata.get("pgd_file_annotations") or [], file_keys):
-        key = annotation["file_key"]
-        if key in files:
+    annotations: dict[str, Mapping[str, Any]] = {}
+    for annotation in metadata.get("pgd_file_annotations") or []:
+        annotations.setdefault(annotation.get("file_key"), annotation)
+    files = []
+    for key in dict.fromkeys(file_keys):
+        if key not in annotations:
             continue
+        annotation = annotations[key]
         assigned = dict.fromkeys(annotation.get("semantic_types") or [])
-        files[key] = {
+        files.append({
             "key": key,
             "types": [_meaning(type_id, configuration) for type_id in assigned],
             "description": (annotation.get("description") or "").strip() or None,
-        }
+        })
     if not files:
         return None
     profile = _profile(metadata.get("pgd_deposition_profile") or {}, configuration)
-    return {"profile": profile, "files": list(files.values())}
+    return {"profile": profile, "files": files}
 
 
 def _profile(selected: Mapping[str, Any], configuration: Configuration) -> dict[str, Any] | None:
@@ -114,16 +117,21 @@ class DepositionProfilesComponent(UIResourceComponent):
         """Add the meanings of the files the record page lists.
 
         The page lists files only to a reader who may read them, and of those
-        only completed uploads, while files are enabled. The meanings cover the
-        same files, so a reader without file access gets none.
+        only completed uploads, in the record's file order, while files are
+        enabled. The meanings cover the same files in the same order, so a
+        reader without file access gets none.
         """
         entry = profile_models(current_app).get(self.config.model_name)
-        files = kwargs.get("files") or {}
+        files = kwargs.get("files")
+        # Checked before ordering, as the page's template does: a record with files
+        # disabled may keep a files.order naming files it no longer has.
+        if not entry or not files or not files.get("enabled", True):
+            return
+        # As the page's Files list: RDM's order (only the files in files.order, if set), completed uploads only.
         listed = [
-            item["key"] for item in files.get("entries") or []
-            if item.get("key") and item.get("status") == "completed"
+            item["key"] for item in order_entries(files) if item.get("key") and item.get("status") == "completed"
         ]
-        if not entry or not files.get("enabled", True) or not listed:
+        if not listed:
             return
         meanings = file_meanings(api_record.to_dict().get("metadata") or {}, listed, entry.configuration.localized())
         if meanings:

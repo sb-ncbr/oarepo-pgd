@@ -41,8 +41,8 @@ METADATA = {
 }
 
 
-def test_the_meanings_cover_the_listed_files_in_annotation_order():
-    meanings = file_meanings(METADATA, ["interview.txt", "interview.wav"], CONFIGURATION.localized("en"))
+def test_the_meanings_cover_the_listed_files_in_their_order():
+    meanings = file_meanings(METADATA, ["interview.wav", "interview.txt"], CONFIGURATION.localized("en"))
 
     assert meanings == {
         "profile": {"id": "recorded-interview", "revision": "1.0", "label": "Recorded interview"},
@@ -71,6 +71,11 @@ def test_the_meanings_cover_the_listed_files_in_annotation_order():
             },
         ],
     }
+
+
+def test_the_rows_follow_the_file_order_not_the_annotation_order():
+    meanings = file_meanings(METADATA, ["interview.txt", "interview.wav"], CONFIGURATION)
+    assert [file["key"] for file in meanings["files"]] == ["interview.txt", "interview.wav"]
 
 
 def test_the_meanings_follow_the_language():
@@ -136,6 +141,19 @@ def test_the_record_page_gets_the_meanings_of_the_files_it_lists():
     assert [file["key"] for file in context["pgd_file_meanings"]["files"]] == ["interview.wav"]
 
 
+def listed_keys(files):
+    context = detail_context({"datasets": PROFILE_MODEL}, "datasets", files)
+    return [file["key"] for file in context["pgd_file_meanings"]["files"]]
+
+
+def test_the_table_follows_the_records_file_order_as_the_files_list_does():
+    # With an order, RDM's Files list shows only the files in it, in that order.
+    entries = [completed("interview.wav"), completed("interview.txt")]
+    assert listed_keys({"enabled": True, "entries": entries, "order": ["interview.txt"]}) == ["interview.txt"]
+    # Without one, it sorts the files by name.
+    assert listed_keys({"enabled": True, "entries": entries}) == ["interview.txt", "interview.wav"]
+
+
 def test_a_draft_preview_leaves_out_uploads_the_page_does_not_list():
     # The record page lists only completed uploads.
     files = {"enabled": True, "entries": [completed("interview.wav"), {"key": "interview.txt", "status": "pending"}]}
@@ -153,6 +171,9 @@ def test_a_reader_who_gets_no_file_list_gets_no_meanings():
 def test_a_record_with_files_disabled_gets_no_meanings():
     files = {"enabled": False, "entries": [completed("interview.wav")]}
     assert detail_context({"datasets": PROFILE_MODEL}, "datasets", files) == {}
+    # A file order left from before files were disabled is not applied.
+    stale = {"enabled": False, "entries": [], "order": ["removed.txt"]}
+    assert detail_context({"datasets": PROFILE_MODEL}, "datasets", stale) == {}
 
 
 def test_other_models_get_no_meanings():
