@@ -24,6 +24,8 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
    presets=[rdm_complete_preset, pgd_preset(__file__)],
    ```
 
+   The plugin adds its controls to the deposit form under ids built from the `application_id` of the model's UI resource config, in `ui/<model>/__init__.py`. The repository templates set it to the model name, which the preset assumes. If it differs, pass it: `pgd_preset(__file__, application_id="Samples")`. Otherwise the deposit page stops with an error that names the value to pass.
+
 3. Describe file types and profiles in YAML next to the model. Semantic types go in `models/<model>/config/semantic-types/*.yaml`, each file a list:
 
    ```yaml

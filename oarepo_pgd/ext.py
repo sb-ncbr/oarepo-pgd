@@ -28,11 +28,10 @@ def ui_overrides(models: dict[str, ModelProfiles]) -> list[UIComponentOverride]:
     for entry in models.values():
         if not entry.ui_blueprint:
             continue
-        prefix = f"{entry.application_id.capitalize()}.Form"
         form = UIComponent("ProfileTabForm", "@js/oarepo_pgd/overrides")
         for page in ("deposit_create", "deposit_edit"):
             endpoint = f"{entry.ui_blueprint}.{page}"
-            overrides.append(UIComponentOverride(endpoint, f"{prefix}.WizardForm.container", form))
+            overrides.append(UIComponentOverride(endpoint, f"{entry.form_prefix}.WizardForm.container", form))
     return overrides
 
 

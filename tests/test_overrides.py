@@ -6,9 +6,11 @@ Both are read from the app's own ``OAREPO_MODELS``.
 from types import SimpleNamespace
 
 import oarepo_ui.config
+import pytest
 from flask import Flask
 
 from oarepo_pgd.components import DepositionProfilesComponent
+from oarepo_pgd.config import ConfigurationError
 from oarepo_pgd.ext import OARepoPGD, finalize_app
 from oarepo_pgd.profiles import Configuration, Profile
 from oarepo_pgd.registry import NAMESPACE_KEY
@@ -71,11 +73,13 @@ def test_a_model_without_a_ui_gets_no_overrides():
     assert served(app)[0] == 200
 
 
-def form_config(app, model_name):
-    resource = SimpleNamespace(config=SimpleNamespace(model_name=model_name))
-    result = {}
+def form_config(app, model_name, prefix=None):
+    """Run the component as oarepo-ui does: the form config already holds the page's prefix."""
+    config = SimpleNamespace(model_name=model_name)
+    result = {"overridableIdPrefix": prefix or f"{model_name.capitalize()}.Form"}
     with app.app_context():
-        DepositionProfilesComponent(resource).form_config(form_config=result, identity=None)
+        DepositionProfilesComponent(SimpleNamespace(config=config)).form_config(form_config=result, identity=None)
+    result.pop("overridableIdPrefix")
     return result
 
 
@@ -83,7 +87,38 @@ def test_the_form_config_carries_the_models_configuration():
     app = create_app({"datasets": registered_model("interviews"), "vocabularies": OTHER_MODEL})
 
     assert form_config(app, "datasets") == {"deposition_profiles": served(app)[1]}
-    assert form_config(app, "vocabularies") == {}
+    assert form_config(app, "vocabularies", prefix="Default.Form") == {}
+
+
+def stop_message(app, model_name, prefix):
+    with pytest.raises(ConfigurationError) as error:
+        form_config(app, model_name, prefix=prefix)
+    return str(error.value)
+
+
+def test_a_deposit_form_with_other_ids_than_the_override_stops_with_the_fix():
+    # oarepo-ui's default application_id; the preset assumed the model name.
+    message = stop_message(create_app({"samples": registered_model("interviews")}), "samples", "Default.Form")
+    assert "the deposit form uses the ids Default.Form.*, but oarepo-pgd added its profile controls under " \
+        "Samples.Form.*" in message
+    assert "Pass application_id='Default' to pgd_preset" in message
+
+
+def test_the_prefix_the_page_sends_to_the_form_decides():
+    # The page may send another prefix than its application_id gives; only that one reaches React.
+    app = create_app({"samples": registered_model("interviews", application_id="Default")})
+    assert "deposition_profiles" in form_config(app, "samples", prefix="Default.Form")
+    assert "Pass application_id='Other'" in stop_message(app, "samples", "Other.Form")
+
+
+def test_a_prefix_no_application_id_gives_points_to_a_custom_form():
+    message = stop_message(create_app({"samples": registered_model("interviews")}), "samples", "MyLab.Deposit")
+    assert "Set OAREPO_PGD_UI_OVERRIDES = False" in message
+
+
+def test_a_host_with_its_own_form_needs_no_matching_ids():
+    app = create_app({"samples": registered_model("interviews")}, OAREPO_PGD_UI_OVERRIDES=False)
+    assert "deposition_profiles" in form_config(app, "samples", prefix="Default.Form")
 
 
 def test_overrides_can_be_switched_off():

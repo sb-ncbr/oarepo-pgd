@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any
 from flask import current_app
 from oarepo_ui.resources.components import UIResourceComponent
 
+from .config import ConfigurationError
 from .registry import profile_models
 from .rules import annotations_of_files
 
@@ -81,14 +82,33 @@ def _meaning(type_id: str, configuration: Configuration) -> dict[str, Any]:
     return {"id": type_id, "label": semantic_type.label, "definition": semantic_type.definition}
 
 
+def _prefix_fix(prefix: Any) -> str:
+    """How to make the plugin's override ids match the form's ``prefix``."""
+    application_id = prefix.removesuffix(".Form") if isinstance(prefix, str) else ""
+    # The preset builds the prefix as oarepo-ui does by default: the capitalized application_id and ".Form".
+    if application_id and f"{application_id.capitalize()}.Form" == prefix:
+        return f"Pass application_id={application_id!r} to pgd_preset in the model, then run ./run.sh install."
+    return "Set OAREPO_PGD_UI_OVERRIDES = False and add the profile controls to the form yourself (see the README)."
+
+
 class DepositionProfilesComponent(UIResourceComponent):
     """Put the model's configuration into the form config and the file meanings on the record page."""
 
     def form_config(self, *, form_config: dict[str, Any], **kwargs: Any) -> None:
         """Add the configuration when the resource's model uses profile-guided deposition."""
         entry = profile_models(current_app).get(self.config.model_name)
-        if entry:
-            form_config[FORM_CONFIG_KEY] = entry.configuration.localized().to_dict()
+        if not entry:
+            return
+        # The plugin's form override is registered under a prefix derived from the
+        # preset's application_id. A different prefix on this page would leave the
+        # form without profile controls while the server still checks every draft.
+        prefix = form_config.get("overridableIdPrefix")
+        if current_app.config.get("OAREPO_PGD_UI_OVERRIDES", True) and prefix != entry.form_prefix:
+            raise ConfigurationError(
+                f"{self.config.model_name}: the deposit form uses the ids {prefix}.*, but oarepo-pgd added its "
+                f"profile controls under {entry.form_prefix}.*. {_prefix_fix(prefix)}"
+            )
+        form_config[FORM_CONFIG_KEY] = entry.configuration.localized().to_dict()
 
     def before_ui_detail(self, *, api_record: Any, extra_context: dict[str, Any], **kwargs: Any) -> None:
         """Add the meanings of the files the record page lists.

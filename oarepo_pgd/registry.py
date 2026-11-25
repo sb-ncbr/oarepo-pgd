@@ -26,6 +26,11 @@ class ModelProfiles:
     ui_blueprint: str | None
     application_id: str
 
+    @property
+    def form_prefix(self) -> str:
+        """The prefix of the deposit form's overridable ids, as oarepo-ui builds it from ``application_id``."""
+        return f"{self.application_id.capitalize()}.Form"
+
 
 def profile_models(app: Flask) -> dict[str, ModelProfiles]:
     """The app's registered models that use profile-guided deposition, by model name."""
