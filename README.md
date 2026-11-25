@@ -77,7 +77,16 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 
    Without it the form says that the profiles are missing.
 
-5. Run `./run.sh install` again, so the frontend is rebuilt with the plugin's components.
+5. From version 0.4.0, show the file meanings on the record page: include the plugin's template in `ui/<model>/templates/semantic-ui/<model>/record_detail/main.html`, for example among the additional record details:
+
+   ```jinja
+   {%- block additional_record_details -%}
+     {{ super() }}
+     {% include "oarepo_pgd/record_detail/file_meanings.html" %}
+   {%- endblock additional_record_details -%}
+   ```
+
+6. Run `./run.sh install` again, so the frontend is rebuilt with the plugin's components.
 
 That is all for a repository with the standard deposit form.
 
@@ -102,6 +111,7 @@ In the short form `{en: ..., cs: ...}`, quote a text that contains a comma, or w
 - The model's configuration in the deposit form's form config, as `deposition_profiles`.
 - `GET /api/deposition-profiles?model=<model>` with the same configuration, for other software, with texts in all their languages. `model` can be omitted while one model uses the plugin.
 - Profile controls in the deposit form's files section. They use the classes of the repository's theme, so the plugin has no stylesheet.
+- A **File meanings** table on the record page, from version 0.4.0: the selected profile and, for each file the page lists, its semantic types and description. A reader who may not read the files sees no file list and no table. The component puts the data in the page's `extra_context` as `pgd_file_meanings`, so a repository that wants other markup puts its own `templates/oarepo_pgd/record_detail/file_meanings.html` in the repository, using the same data.
 - English and Czech texts: form texts go through the plugin's i18next instance and server messages through gettext. Adding another language means adding two catalogues to the plugin: a `translations.json` in `theme/assets/semantic-ui/translations/oarepo_pgd/messages/<lang>/`, registered in that folder's `index.js`, and a `.po` file made from `translations/messages.pot`, compiled to `translations/<lang>/LC_MESSAGES/messages.mo`.
 
 ## Deposit form: standard and custom

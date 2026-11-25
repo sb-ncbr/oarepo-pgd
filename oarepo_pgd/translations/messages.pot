@@ -72,3 +72,15 @@ msgid_plural ""
 msgstr[0] ""
 msgstr[1] ""
 
+
+msgid "File meanings"
+msgstr ""
+
+msgid "Deposition profile"
+msgstr ""
+
+msgid "File"
+msgstr ""
+
+msgid "Meaning"
+msgstr ""

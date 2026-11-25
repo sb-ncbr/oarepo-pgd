@@ -1,6 +1,6 @@
-"""Publish the deposition configuration for other software.
+"""Blueprints: the deposition configuration for other software, and the plugin's templates.
 
-The deposit form does not use this; it gets the configuration with its form config.
+The deposit form does not use the API; it gets the configuration with its form config.
 """
 
 from __future__ import annotations
@@ -29,3 +29,8 @@ def create_api_blueprint(app: Flask) -> Blueprint:
         return jsonify(models[model].configuration.to_dict())
 
     return blueprint
+
+
+def create_ui_blueprint(app: Flask) -> Blueprint:
+    """Make the plugin's templates available to the UI app, such as the record page's file meanings."""
+    return Blueprint("oarepo_pgd_ui", __name__, template_folder="templates")

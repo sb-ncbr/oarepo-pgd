@@ -10,26 +10,101 @@ class, in ``ui/<model>/__init__.py``, after the entries already there::
         components = [*RDMRecordsUIResourceConfig.components, DepositionProfilesComponent]
 
 The form then finds the configuration in its form config, as ``deposition_profiles``,
-with its texts in the page's language.
+with its texts in the page's language. The record page finds the meanings of the
+files it lists in its ``extra_context``, as ``pgd_file_meanings``, for the
+template ``oarepo_pgd/record_detail/file_meanings.html``.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING, Any
 
 from flask import current_app
 from oarepo_ui.resources.components import UIResourceComponent
 
 from .registry import profile_models
+from .rules import annotations_of_files
+
+if TYPE_CHECKING:
+    from .profiles import Configuration
 
 FORM_CONFIG_KEY = "deposition_profiles"
+FILE_MEANINGS_KEY = "pgd_file_meanings"
+
+
+def file_meanings(
+    metadata: Mapping[str, Any], file_keys: Iterable[str], configuration: Configuration,
+) -> dict[str, Any] | None:
+    """The profile and the meanings of the listed files, as the record page shows them.
+
+    Only files in ``file_keys`` appear, each once, in the order of the
+    annotations. A type missing from the configuration shows its identifier.
+    The profile shows its configured name only when the stored revision is the
+    configured one; otherwise it shows the stored identifier and revision.
+    Returns None when no listed file has an annotation.
+    """
+    files = {}
+    for annotation in annotations_of_files(metadata.get("pgd_file_annotations") or [], file_keys):
+        key = annotation["file_key"]
+        if key in files:
+            continue
+        assigned = dict.fromkeys(annotation.get("semantic_types") or [])
+        files[key] = {
+            "key": key,
+            "types": [_meaning(type_id, configuration) for type_id in assigned],
+            "description": (annotation.get("description") or "").strip() or None,
+        }
+    if not files:
+        return None
+    profile = _profile(metadata.get("pgd_deposition_profile") or {}, configuration)
+    return {"profile": profile, "files": list(files.values())}
+
+
+def _profile(selected: Mapping[str, Any], configuration: Configuration) -> dict[str, Any] | None:
+    profile_id, revision = selected.get("id"), selected.get("revision")
+    if not profile_id:
+        return None
+    profile = configuration.profile(profile_id)
+    if profile and profile.revision == revision:
+        label = profile.dataset_category
+    else:
+        # The configured name may belong to another revision.
+        label = f"{profile_id} ({revision})" if revision else profile_id
+    return {"id": profile_id, "revision": revision, "label": label}
+
+
+def _meaning(type_id: str, configuration: Configuration) -> dict[str, Any]:
+    semantic_type = configuration.semantic_type(type_id)
+    if semantic_type is None:
+        return {"id": type_id, "label": type_id, "definition": None}
+    return {"id": type_id, "label": semantic_type.label, "definition": semantic_type.definition}
 
 
 class DepositionProfilesComponent(UIResourceComponent):
-    """Put the model's semantic types and profiles into the form config."""
+    """Put the model's configuration into the form config and the file meanings on the record page."""
 
     def form_config(self, *, form_config: dict[str, Any], **kwargs: Any) -> None:
         """Add the configuration when the resource's model uses profile-guided deposition."""
         entry = profile_models(current_app).get(self.config.model_name)
         if entry:
             form_config[FORM_CONFIG_KEY] = entry.configuration.localized().to_dict()
+
+    def before_ui_detail(self, *, api_record: Any, extra_context: dict[str, Any], **kwargs: Any) -> None:
+        """Add the meanings of the files the record page lists.
+
+        The page lists files only to a reader who may read them, and of those
+        only completed uploads, while files are enabled. The meanings cover the
+        same files, so a reader without file access gets none.
+        """
+        entry = profile_models(current_app).get(self.config.model_name)
+        files = kwargs.get("files") or {}
+        listed = [
+            item["key"] for item in files.get("entries") or []
+            if item.get("key") and item.get("status") == "completed"
+        ]
+        if not entry or not files.get("enabled", True) or not listed:
+            return
+        meanings = file_meanings(api_record.to_dict().get("metadata") or {}, listed, entry.configuration.localized())
+        if meanings:
+            extra_context[FILE_MEANINGS_KEY] = meanings

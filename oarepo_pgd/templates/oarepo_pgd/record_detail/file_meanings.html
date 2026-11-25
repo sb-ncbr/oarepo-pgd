@@ -1,0 +1,48 @@
+{#-
+  The meanings of the files a record page lists, for a model with profile-guided deposition.
+
+  Include it in the model's record_detail/main.html:
+
+    {%- block additional_record_details -%}
+      {{ super() }}
+      {% include "oarepo_pgd/record_detail/file_meanings.html" %}
+    {%- endblock additional_record_details -%}
+
+  DepositionProfilesComponent prepares the data as extra_context.pgd_file_meanings:
+  the selected profile and, for each annotated file the page lists, its key, its
+  semantic types (id, label, definition) and description. The template renders
+  nothing without it, for example for a reader who may not read the files.
+  A repository changes the markup with its own template at this path.
+-#}
+{%- set meanings = (extra_context or {}).get("pgd_file_meanings") -%}
+{%- if meanings -%}
+<section id="file-meanings" class="rel-mt-2" aria-labelledby="file-meanings-heading">
+  <h2 id="file-meanings-heading">{{ _("File meanings") }}</h2>
+  {%- if meanings.profile %}
+  <p>{{ _("Deposition profile") }}: <strong>{{ meanings.profile.label }}</strong></p>
+  {%- endif %}
+  <table class="ui celled compact table">
+    <thead>
+      <tr>
+        <th class="six wide">{{ _("File") }}</th>
+        <th>{{ _("Meaning") }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {%- for file in meanings.files %}
+      <tr>
+        <td class="text-break">{{ file.key }}</td>
+        <td>
+          {%- for type in file.types %}
+          <span class="ui basic label"{% if type.definition %} title="{{ type.definition }}"{% endif %}>{{ type.label }}</span>
+          {%- endfor %}
+          {%- if file.description %}
+          <p class="rel-mt-1">{{ file.description }}</p>
+          {%- endif %}
+        </td>
+      </tr>
+      {%- endfor %}
+    </tbody>
+  </table>
+</section>
+{%- endif -%}

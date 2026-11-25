@@ -74,3 +74,15 @@ msgstr[1] ""
 msgstr[2] ""
 "%(label)s: %(found)s z nejvýše %(num)s souborů. Odeberte nadbytečné "
 "soubory, nebo jim přiřaďte jiný význam."
+
+msgid "File meanings"
+msgstr "Významy souborů"
+
+msgid "Deposition profile"
+msgstr "Depoziční profil"
+
+msgid "File"
+msgstr "Soubor"
+
+msgid "Meaning"
+msgstr "Význam"
