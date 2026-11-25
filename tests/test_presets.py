@@ -61,10 +61,16 @@ def test_keeps_the_configuration_on_the_model():
     assert [profile.id for profile in stored["configuration"].profiles] == ["field-survey", "photo-only"]
 
 
-def test_accepts_an_identical_existing_definition():
-    existing = {"Metadata": {"properties": deepcopy(PROPERTIES)}}
+def test_adding_the_fields_again_changes_nothing():
+    types = add_fields([{"Metadata": {"properties": {}}}])
     expected = model_properties(load_configuration(TEST_CONFIG))
-    assert add_fields([existing])[0]["Metadata"]["properties"] == expected
+    assert add_fields(types)[0]["Metadata"]["properties"] == expected
+
+
+def test_refuses_an_existing_definition_without_the_search_filters():
+    existing = {"Metadata": {"properties": deepcopy(PROPERTIES)}}
+    with pytest.raises(ValueError, match="'pgd_deposition_profile' is already defined"):
+        add_fields([existing])
 
 
 def test_search_filters_use_the_configured_labels():

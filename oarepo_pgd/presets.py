@@ -11,7 +11,7 @@ the ``pgd_deposition_profile`` and ``pgd_file_annotations`` metadata fields, mak
 the record schema check every draft against its selected profile, and publishes
 a record with the annotations of its own files only. An invalid
 configuration, a configuration without profiles, or a model that already
-defines either field differently stops the process at startup.
+defines either field differently from the preset stops the process at startup.
 """
 
 from __future__ import annotations
@@ -136,12 +136,13 @@ def pgd_preset(
                 if name in collection:
                     metadata = deepcopy(collection[name])
                     properties = metadata.setdefault("properties", {})
-                    for field, definition in PROPERTIES.items():
-                        if field in properties and properties[field] not in (definition, fields[field]):
+                    for field in PROPERTIES:
+                        # A definition identical to the preset's own is accepted, so applying it again changes nothing.
+                        if field in properties and properties[field] != fields[field]:
                             raise ValueError(
-                                f"{model.name}: metadata field {field!r} is already defined differently, by the "
-                                "model or by another package. oarepo-pgd defines this field itself; remove or "
-                                "rename the other definition."
+                                f"{model.name}: metadata field {field!r} is already defined, by the model or by "
+                                "another package. oarepo-pgd defines this field itself; remove or rename the other "
+                                "definition."
                             )
                     properties.update(deepcopy(fields))
                     types[index] = {**collection, name: metadata}

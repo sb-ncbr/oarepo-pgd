@@ -32,7 +32,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
      definition: A written transcription of an interview session.
    ```
 
-   Profiles go in `models/<model>/config/profiles/*.yaml`, one profile per file (from version 0.4.0, `.yml` files are read too):
+   Profiles go in `models/<model>/config/profiles/*.yaml`, one profile per file. Files ending in `.yml` are read too:
 
    ```yaml
    id: transcribed-interview
@@ -59,7 +59,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 
    A count above `max_files` is an error at every level.
 
-   The full format is defined by the schemas in `oarepo_pgd/config_schema.py`. A mistake in a YAML file, or a folder or file that cannot be read, stops the repository at startup with a message naming the file. So does a missing configuration directory or a configuration without profiles: an enabled preset needs at least one profile, so deposits are never silently left unchecked. The preset defines the `pgd_deposition_profile` and `pgd_file_annotations` fields itself. The `pgd_` prefix keeps them apart from fields of the model and of other packages; if either name is already defined differently, the repository stops at startup and names the field.
+   The full format is defined by the schemas in `oarepo_pgd/config_schema.py`. A mistake in a YAML file, or a folder or file that cannot be read, stops the repository at startup with a message naming the file. So does a missing configuration directory or a configuration without profiles: an enabled preset needs at least one profile, so deposits are never silently left unchecked. The preset defines the `pgd_deposition_profile` and `pgd_file_annotations` fields itself. The `pgd_` prefix keeps them apart from fields of the model and of other packages; if the model or another package already defines either field, the repository stops at startup and names the field. A definition identical to the preset's own, including its search filters, is accepted, so applying the preset again changes nothing.
 
 4. Give the deposit form the configuration: add the plugin's component to the `components` list of the model's UI resource config class, in `ui/<model>/__init__.py`, after the entries already there:
 
@@ -77,7 +77,7 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 
    Without it the form says that the profiles are missing.
 
-5. From version 0.4.0, show the file meanings on the record page: include the plugin's template in `ui/<model>/templates/semantic-ui/<model>/record_detail/main.html`, for example among the additional record details:
+5. Show the file meanings on the record page: include the plugin's template in `ui/<model>/templates/semantic-ui/<model>/record_detail/main.html`, for example among the additional record details:
 
    ```jinja
    {%- block additional_record_details -%}
@@ -111,7 +111,7 @@ In the short form `{en: ..., cs: ...}`, quote a text that contains a comma, or w
 - The model's configuration in the deposit form's form config, as `deposition_profiles`.
 - `GET /api/deposition-profiles?model=<model>` with the same configuration, for other software, with texts in all their languages. `model` can be omitted while one model uses the plugin.
 - Profile controls in the deposit form's files section. They use the classes of the repository's theme, so the plugin has no stylesheet.
-- A **File meanings** table on the record page, from version 0.4.0: the selected profile and, for each file the page lists, its semantic types and description. A reader who may not read the files sees no file list and no table. The component puts the data in the page's `extra_context` as `pgd_file_meanings`, so a repository that wants other markup puts its own `templates/oarepo_pgd/record_detail/file_meanings.html` in the repository, using the same data.
+- A **File meanings** table on the record page: the selected profile and, for each file the page lists, its semantic types and description. A reader who may not read the files sees no file list and no table. The component puts the data in the page's `extra_context` as `pgd_file_meanings`, so a repository that wants other markup puts its own `templates/oarepo_pgd/record_detail/file_meanings.html` in the repository, using the same data.
 - English and Czech texts: form texts go through the plugin's i18next instance and server messages through gettext. Adding another language means adding two catalogues to the plugin: a `translations.json` in `theme/assets/semantic-ui/translations/oarepo_pgd/messages/<lang>/`, registered in that folder's `index.js`, and a `.po` file made from `translations/messages.pot`, compiled to `translations/<lang>/LC_MESSAGES/messages.mo`.
 
 ## Deposit form: standard and custom
@@ -142,7 +142,7 @@ OAREPO_PGD_UI_OVERRIDES = False
 
   It must be inside the form's Formik, Redux and form-config context, as the standard sections are. Showing server errors for `metadata.pgd_deposition_profile` and `metadata.pgd_file_annotations` next to the files is then the form's own task.
 
-**Restyling parts of the controls.** From version 0.4.0, four parts of the profile controls are overridable components, in the standard and in custom forms. Their IDs start with the form's prefix: the model's application id with a capital letter, followed by `.Form`, for example `Datasets.Form`.
+**Restyling parts of the controls.** Four parts of the profile controls are overridable components, in the standard and in custom forms. Their IDs start with the form's prefix: the model's application id with a capital letter, followed by `.Form`, for example `Datasets.Form`.
 
 | ID | Component | Props |
 |---|---|---|
