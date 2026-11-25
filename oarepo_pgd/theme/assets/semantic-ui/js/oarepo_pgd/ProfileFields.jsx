@@ -55,50 +55,49 @@ export function ProfileFields({ record, uploader }) {
     if (next !== latest.current) setAnnotations(next);
   }, [[...present].join("\0"), keys.join("\0"), annotations, profile]);
 
-  if (!filesEnabled || (configuration && !configuration.profiles.length)) return uploader;
-  if (!configuration) {
-    return (
-      <>
+  // Profile controls only for a record with files and a model with profiles.
+  const controls = filesEnabled && configuration?.profiles.length > 0;
+  const types = new Map((configuration?.semantic_types ?? []).map((type) => [type.id, type]));
+
+  // One tree for every state, with the uploader always in the same place:
+  // switching a record to metadata-only and back must not remount the
+  // uploader, which would drop files selected but not yet uploading.
+  return (
+    <section className="profile-guided">
+      {controls && (
+        <>
+          <h2>{t("Describe files with a profile")}</h2>
+          <p>{t("Choose a deposition profile, upload your files, and review their meanings. You can save your draft and continue later.")}</p>
+          <Overridable id={uid("ProfileSelector")}>
+            <ProfileSelector
+              profiles={configuration.profiles}
+              value={profile?.id ?? ""}
+              onChange={(value) => {
+                const choice = configuration.profiles.find((item) => item.id === value);
+                setFieldValue("metadata.pgd_deposition_profile", choice ? { id: choice.id, revision: choice.revision } : {});
+              }}
+            />
+          </Overridable>
+          {selected?.id && !profile && (
+            <Message negative role="alert">
+              {t("This draft uses a profile version that is no longer available. Select a profile and review the file meanings.")}
+            </Message>
+          )}
+          {profile && (
+            <Overridable id={uid("RequirementCards")}>
+              <RequirementCards profile={profile} types={types} counts={result.counts} />
+            </Overridable>
+          )}
+          <h3 className="rel-mt-2">{t("Upload files")}</h3>
+        </>
+      )}
+      {filesEnabled && !configuration && (
         <Message negative role="alert">
           {t("The deposition profiles are missing from this form's configuration, so file requirements cannot be checked.")}
         </Message>
-        {uploader}
-      </>
-    );
-  }
-
-  const types = new Map(configuration.semantic_types.map((type) => [type.id, type]));
-
-  return (
-    <section className="profile-guided">
-      <h2>{t("Describe files with a profile")}</h2>
-      <p>{t("Choose a deposition profile, upload your files, and review their meanings. You can save your draft and continue later.")}</p>
-      <Overridable id={uid("ProfileSelector")}>
-        <ProfileSelector
-          profiles={configuration.profiles}
-          value={profile?.id ?? ""}
-          onChange={(value) => {
-            const choice = configuration.profiles.find((item) => item.id === value);
-            setFieldValue("metadata.pgd_deposition_profile", choice ? { id: choice.id, revision: choice.revision } : {});
-          }}
-        />
-      </Overridable>
-      {selected?.id && !profile && (
-        <Message negative role="alert">
-          {t("This draft uses a profile version that is no longer available. Select a profile and review the file meanings.")}
-        </Message>
       )}
-
-      {profile && (
-        <Overridable id={uid("RequirementCards")}>
-          <RequirementCards profile={profile} types={types} counts={result.counts} />
-        </Overridable>
-      )}
-
-      <h3 className="rel-mt-2">{t("Upload files")}</h3>
       {uploader}
-
-      {profile && (
+      {controls && profile && (
         <>
           <Overridable id={uid("FileAssignments")}>
             <FileAssignments configuration={configuration} profile={profile} types={types} keys={keys}
