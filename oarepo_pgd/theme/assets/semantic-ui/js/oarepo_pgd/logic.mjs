@@ -65,6 +65,38 @@ export function requirementState(requirement, count) {
 }
 
 /**
+ * The profile to select for a draft that has none: the model's only profile.
+ *
+ * Returns { id, revision }, or null when the model has several profiles or the
+ * draft already names one. A named profile that is outdated or gone stays as it
+ * is: the depositor selects it again and reviews the file meanings.
+ */
+export function preselectedProfile(configuration, selected) {
+  const profiles = configuration?.profiles ?? [];
+  if (profiles.length !== 1 || selected?.id) return null;
+  const [only] = profiles;
+  return { id: only.id, revision: only.revision };
+}
+
+/**
+ * Offer the preselection once per deposit form.
+ *
+ * Returns `offer(form, configuration, selected)`, which gives the profile to
+ * select the first time it is called for `form` and null afterwards, also when
+ * the draft had a profile then. `form` is an object that lives as long as the
+ * form, such as its Redux store: tabbed forms unmount the files section when
+ * the depositor leaves its tab, so a cleared selection must not be offered
+ * again on return.
+ */
+export function profilePreselection(offered = new WeakSet()) {
+  return (form, configuration, selected) => {
+    if (offered.has(form)) return null;
+    offered.add(form);
+    return preselectedProfile(configuration, selected);
+  };
+}
+
+/**
  * Check annotations against the selected profile.
  *
  * Returns { errors, counts, states }. Each error is

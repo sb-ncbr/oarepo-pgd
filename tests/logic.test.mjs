@@ -2,7 +2,7 @@
 // The rules themselves are tested against the shared cases in rules.test.mjs.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { countNotation, errorText, fileAlerts, requirementState, suggestType } from "../oarepo_pgd/theme/assets/semantic-ui/js/oarepo_pgd/logic.mjs";
+import { countNotation, errorText, fileAlerts, preselectedProfile, profilePreselection, requirementState, suggestType } from "../oarepo_pgd/theme/assets/semantic-ui/js/oarepo_pgd/logic.mjs";
 import { translator } from "./translator.mjs";
 
 const profile = {
@@ -59,4 +59,35 @@ test("file alerts show each distinct error once, with distinct keys", () => {
   assert.equal(alerts.length, 3);
   assert.equal(new Set(alerts.map((alert) => alert.id)).size, 3);
   assert.deepEqual(fileAlerts(errors, "c.pdf"), []);
+});
+
+test("the only profile is preselected for a draft without one", () => {
+  const one = { profiles: [{ id: "survey", revision: "2", requirements: [] }] };
+  const two = { profiles: [...one.profiles, { id: "photos", revision: "1", requirements: [] }] };
+  assert.deepEqual(preselectedProfile(one, undefined), { id: "survey", revision: "2" });
+  assert.deepEqual(preselectedProfile(one, {}), { id: "survey", revision: "2" });
+  // Several profiles: the depositor chooses.
+  assert.equal(preselectedProfile(two, undefined), null);
+  // A selection stays, also an outdated revision or a profile that is gone.
+  assert.equal(preselectedProfile(one, { id: "survey", revision: "1" }), null);
+  assert.equal(preselectedProfile(one, { id: "retired", revision: "1" }), null);
+  assert.equal(preselectedProfile({ profiles: [] }, undefined), null);
+  assert.equal(preselectedProfile(undefined, undefined), null);
+});
+
+test("the preselection is offered once per form, not once per mount of the files tab", () => {
+  const one = { profiles: [{ id: "survey", revision: "2", requirements: [] }] };
+  const offer = profilePreselection();
+  const form = {};
+  // The files tab opens: the only profile is offered.
+  assert.deepEqual(offer(form, one, undefined), { id: "survey", revision: "2" });
+  // The depositor clears it, leaves the tab (the section unmounts) and returns.
+  assert.equal(offer(form, one, {}), null);
+  assert.equal(offer(form, one, undefined), null);
+  // Another form on the page is offered the profile on its own.
+  assert.deepEqual(offer({}, one, undefined), { id: "survey", revision: "2" });
+  // A form opened with a profile is not offered one after the depositor clears it.
+  const opened = {};
+  assert.equal(offer(opened, one, { id: "survey", revision: "2" }), null);
+  assert.equal(offer(opened, one, {}), null);
 });

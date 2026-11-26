@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { useFormikContext } from "formik";
+import { useStore } from "react-redux";
 import Overridable from "react-overridable";
 import { buildUID } from "react-searchkit";
 import { Message } from "semantic-ui-react";
@@ -8,10 +9,13 @@ import { useFormConfig } from "@js/oarepo_ui/forms";
 import { useDepositionCheck } from "./hooks";
 import { t } from "@translations/oarepo_pgd";
 import { FileAssignments } from "./FileAssignments";
-import { annotationEditor, reconcileAnnotations } from "./logic.mjs";
+import { annotationEditor, profilePreselection, reconcileAnnotations } from "./logic.mjs";
 import { ProfileSelector } from "./ProfileSelector";
 import { RequirementCards } from "./RequirementCards";
 import { SemanticDefinitions } from "./SemanticDefinitions";
+
+// Shared by every form on the page; each form is remembered by its Redux store.
+const offerProfile = profilePreselection();
 
 /**
  * Files section with profile selection, requirement cards and file meanings around the standard uploader.
@@ -21,6 +25,7 @@ import { SemanticDefinitions } from "./SemanticDefinitions";
  */
 export function ProfileFields({ record, uploader }) {
   const { setFieldValue } = useFormikContext();
+  const store = useStore();
   const { overridableIdPrefix } = useFormConfig();
   const uid = (part) => buildUID(overridableIdPrefix, `ProfileFields.${part}`);
   const { configuration, metadata, filesEnabled, present, keys, result } = useDepositionCheck(record);
@@ -55,6 +60,15 @@ export function ProfileFields({ record, uploader }) {
 
   // Profile controls only for a record with files and a model with profiles.
   const controls = filesEnabled && configuration?.profiles.length > 0;
+
+  // A model with one profile: select it once the controls are shown, if the
+  // draft has none. Once per form, not per mount of this section, so a
+  // depositor who clears it and comes back to the tab is not overruled.
+  useEffect(() => {
+    if (!controls) return;
+    const choice = offerProfile(store, configuration, selected);
+    if (choice) setFieldValue("metadata.pgd_deposition_profile", choice);
+  }, [controls]);
   const types = new Map((configuration?.semantic_types ?? []).map((type) => [type.id, type]));
 
   // One tree for every state, with the uploader always in the same place:
