@@ -1,5 +1,5 @@
 {
-  "description": "Rule cases shared by test_rules.py and rules.test.mjs. Errors are the English texts as the server reports them (file key prefix included); counts are checked in the form only.",
+  "description": "Rule cases shared by test_rules.py and rules.test.mjs. Errors are the English texts as the server reports them (file key prefix included); issues give each error's code, file key and requirement in the same order. Counts and requirement states are checked on both sides.",
   "configurations": {
     "field-work": {
       "semantic_types": [
@@ -187,9 +187,14 @@
         "README.md"
       ],
       "errors": [],
+      "issues": [],
       "counts": {
         "photos": 1,
         "notes": 1
+      },
+      "states": {
+        "photos": "met",
+        "notes": "met"
       }
     },
     {
@@ -198,7 +203,10 @@
       "profile": null,
       "annotations": [],
       "file_keys": [],
-      "errors": []
+      "errors": [],
+      "issues": [],
+      "counts": {},
+      "states": {}
     },
     {
       "name": "no profile selected",
@@ -232,7 +240,16 @@
       ],
       "errors": [
         "Select a deposition profile."
-      ]
+      ],
+      "issues": [
+        {
+          "code": "profile_missing",
+          "file_key": null,
+          "requirement": null
+        }
+      ],
+      "counts": {},
+      "states": {}
     },
     {
       "name": "outdated profile revision",
@@ -269,7 +286,22 @@
       ],
       "errors": [
         "Field survey: the profile has changed since it was selected. Select it again and review the file meanings."
-      ]
+      ],
+      "issues": [
+        {
+          "code": "profile_changed",
+          "file_key": null,
+          "requirement": null
+        }
+      ],
+      "counts": {
+        "photos": 1,
+        "notes": 1
+      },
+      "states": {
+        "photos": "met",
+        "notes": "met"
+      }
     },
     {
       "name": "annotations follow the inventory and the profile",
@@ -331,7 +363,37 @@
         "drone.png: remove the repeated file meaning.",
         "drone.png: drone-video is not a file meaning in the Field survey profile.",
         "unlabelled.csv: select at least one file meaning."
-      ]
+      ],
+      "issues": [
+        {
+          "code": "annotation_repeated",
+          "file_key": "site.jpg",
+          "requirement": null
+        },
+        {
+          "code": "meaning_repeated",
+          "file_key": "drone.png",
+          "requirement": null
+        },
+        {
+          "code": "meaning_not_in_profile",
+          "file_key": "drone.png",
+          "requirement": null
+        },
+        {
+          "code": "meaning_missing",
+          "file_key": "unlabelled.csv",
+          "requirement": null
+        }
+      ],
+      "counts": {
+        "photos": 2,
+        "notes": 1
+      },
+      "states": {
+        "photos": "met",
+        "notes": "met"
+      }
     },
     {
       "name": "formats and descriptions",
@@ -376,7 +438,27 @@
       "errors": [
         "README.md: Other needs a description of what the file is.",
         "site.pdf: Site photo accepts jpg, png, tiff files."
-      ]
+      ],
+      "issues": [
+        {
+          "code": "description_missing",
+          "file_key": "README.md",
+          "requirement": null
+        },
+        {
+          "code": "format_not_accepted",
+          "file_key": "site.pdf",
+          "requirement": null
+        }
+      ],
+      "counts": {
+        "photos": 2,
+        "notes": 1
+      },
+      "states": {
+        "photos": "met",
+        "notes": "met"
+      }
     },
     {
       "name": "missing required files (singular minimum)",
@@ -390,9 +472,20 @@
       "errors": [
         "Site photos: 0 of at least 1 file. Upload at least one photo of the site."
       ],
+      "issues": [
+        {
+          "code": "too_few_files",
+          "file_key": null,
+          "requirement": "photos"
+        }
+      ],
       "counts": {
         "photos": 0,
         "notes": 0
+      },
+      "states": {
+        "photos": "unmet",
+        "notes": "advised"
       }
     },
     {
@@ -415,9 +508,14 @@
         "annotated.png"
       ],
       "errors": [],
+      "issues": [],
       "counts": {
         "photos": 1,
         "notes": 1
+      },
+      "states": {
+        "photos": "met",
+        "notes": "met"
       }
     },
     {
@@ -442,9 +540,20 @@
       "errors": [
         "Field material: 1 of at least 2 files. Add photos or notes."
       ],
+      "issues": [
+        {
+          "code": "too_few_files",
+          "file_key": null,
+          "requirement": "material"
+        }
+      ],
       "counts": {
         "material": 1,
         "notes": 1
+      },
+      "states": {
+        "material": "unmet",
+        "notes": "met"
       }
     },
     {
@@ -476,9 +585,20 @@
       "errors": [
         "Notes: 2 of at most 1 file. Remove or reassign the extra files."
       ],
+      "issues": [
+        {
+          "code": "too_many_files",
+          "file_key": null,
+          "requirement": "notes"
+        }
+      ],
       "counts": {
         "material": 2,
         "notes": 2
+      },
+      "states": {
+        "material": "met",
+        "notes": "unmet"
       }
     },
     {
@@ -492,7 +612,22 @@
       "file_keys": [],
       "errors": [
         "Field material: 0 of at least 2 files. Add photos or notes."
-      ]
+      ],
+      "issues": [
+        {
+          "code": "too_few_files",
+          "file_key": null,
+          "requirement": "material"
+        }
+      ],
+      "counts": {
+        "material": 0,
+        "notes": 0
+      },
+      "states": {
+        "material": "unmet",
+        "notes": "advised"
+      }
     }
   ]
 }

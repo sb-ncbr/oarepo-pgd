@@ -15,6 +15,11 @@ for (const item of shared.cases) {
     const metadata = { pgd_deposition_profile: item.profile, pgd_file_annotations: item.annotations };
     const result = checkDeposit(shared.configurations[item.configuration], metadata, item.file_keys);
     assert.deepEqual(result.errors.map((error) => errorText(error, english)), item.errors);
-    if (item.counts) assert.deepEqual(result.counts, item.counts);
+    assert.deepEqual(
+      result.errors.map(({ code, key, requirement }) => ({ code, file_key: key, requirement })),
+      item.issues,
+    );
+    assert.deepEqual(result.counts, item.counts);
+    assert.deepEqual(result.states, item.states);
   });
 }

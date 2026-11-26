@@ -7,9 +7,9 @@ const root = new URL("../oarepo_pgd/theme/assets/semantic-ui/", import.meta.url)
 const source = readdirSync(new URL("js/oarepo_pgd/", root))
   .map((name) => readFileSync(new URL(`js/oarepo_pgd/${name}`, root), "utf-8"))
   .join("\n");
-// Texts passed to t(), i18next.t() and the rule checker's add().
+// Texts passed to t(), i18next.t() and the rule checker's add(code, key, message).
 const used = new Set(
-  [...source.matchAll(/(?:\bt|i18next\.t|add\((?:null|key),)\s*\(?\s*"([^"]+)"/g)].map((match) => match[1]),
+  [...source.matchAll(/(?:\bt|i18next\.t|add\("\w+",\s*(?:null|key),)\s*\(?\s*"([^"]+)"/g)].map((match) => match[1]),
 );
 const czech = JSON.parse(readFileSync(new URL("translations/oarepo_pgd/messages/cs/translations.json", root), "utf-8"));
 const english = JSON.parse(readFileSync(new URL("translations/oarepo_pgd/messages/en/translations.json", root), "utf-8"));

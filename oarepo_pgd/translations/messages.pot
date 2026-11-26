@@ -32,28 +32,25 @@ msgid ""
 "again and review the file meanings."
 msgstr ""
 
-#, python-format
-msgid "%(key)s: the file is annotated more than once. Keep one annotation."
+msgid "the file is annotated more than once. Keep one annotation."
+msgstr ""
+
+msgid "select at least one file meaning."
+msgstr ""
+
+msgid "remove the repeated file meaning."
 msgstr ""
 
 #, python-format
-msgid "%(key)s: select at least one file meaning."
+msgid "%(label)s is not a file meaning in the %(profile)s profile."
 msgstr ""
 
 #, python-format
-msgid "%(key)s: remove the repeated file meaning."
+msgid "%(label)s accepts %(formats)s files."
 msgstr ""
 
 #, python-format
-msgid "%(key)s: %(label)s is not a file meaning in the %(profile)s profile."
-msgstr ""
-
-#, python-format
-msgid "%(key)s: %(label)s accepts %(formats)s files."
-msgstr ""
-
-#, python-format
-msgid "%(key)s: %(label)s needs a description of what the file is."
+msgid "%(label)s needs a description of what the file is."
 msgstr ""
 
 #, python-format

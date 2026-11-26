@@ -27,29 +27,26 @@ msgstr ""
 "%(profile)s: profil se od svého výběru změnil. Vyberte ho znovu a "
 "zkontrolujte významy souborů."
 
-#, python-format
-msgid "%(key)s: the file is annotated more than once. Keep one annotation."
-msgstr "%(key)s: soubor má více anotací. Ponechte jen jednu."
+msgid "the file is annotated more than once. Keep one annotation."
+msgstr "soubor má více anotací. Ponechte jen jednu."
+
+msgid "select at least one file meaning."
+msgstr "vyberte alespoň jeden význam souboru."
+
+msgid "remove the repeated file meaning."
+msgstr "odeberte opakovaný význam souboru."
 
 #, python-format
-msgid "%(key)s: select at least one file meaning."
-msgstr "%(key)s: vyberte alespoň jeden význam souboru."
+msgid "%(label)s is not a file meaning in the %(profile)s profile."
+msgstr "%(label)s není význam souboru v profilu %(profile)s."
 
 #, python-format
-msgid "%(key)s: remove the repeated file meaning."
-msgstr "%(key)s: odeberte opakovaný význam souboru."
+msgid "%(label)s accepts %(formats)s files."
+msgstr "%(label)s přijímá soubory %(formats)s."
 
 #, python-format
-msgid "%(key)s: %(label)s is not a file meaning in the %(profile)s profile."
-msgstr "%(key)s: %(label)s není význam souboru v profilu %(profile)s."
-
-#, python-format
-msgid "%(key)s: %(label)s accepts %(formats)s files."
-msgstr "%(key)s: %(label)s přijímá soubory %(formats)s."
-
-#, python-format
-msgid "%(key)s: %(label)s needs a description of what the file is."
-msgstr "%(key)s: %(label)s vyžaduje popis toho, co soubor obsahuje."
+msgid "%(label)s needs a description of what the file is."
+msgstr "%(label)s vyžaduje popis toho, co soubor obsahuje."
 
 #, python-format
 msgid "%(label)s: %(found)s of at least %(num)s file."

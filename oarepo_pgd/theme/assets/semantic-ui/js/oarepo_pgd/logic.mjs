@@ -1,6 +1,6 @@
 // Form-side profile logic, without React or i18next so node can test it.
-// checkDeposit mirrors oarepo_pgd/rules.py: keep its rules, messages and their
-// order in step with the server check.
+// checkDeposit mirrors oarepo_pgd/rules.py: keep its rules, codes, messages and
+// their order in step with the server check.
 
 function patternExpression(pattern) {
   const escaped = pattern.normalize().replace(/[.+?^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*");
@@ -54,7 +54,7 @@ export function countNotation({ min_files: minimum, max_files: maximum }) {
  * How a requirement stands with `count` matching files: "unmet" blocks
  * publication (a required minimum not reached, or any maximum exceeded),
  * "advised" is a recommended minimum not reached, which publication ignores,
- * and "met" is everything else.
+ * and "met" is everything else. The server's requirement_state is the same rule.
  */
 export function requirementState(requirement, count) {
   const { level, min_files: minimum, max_files: maximum } = requirement;
@@ -67,28 +67,33 @@ export function requirementState(requirement, count) {
 /**
  * Check annotations against the selected profile.
  *
- * Returns { errors, counts }. Each error is { key, message, params }: `key` is
- * the file the error is about (null for the profile or a requirement),
- * `message` is a catalogue key whose English text is the key itself, and
+ * Returns { errors, counts, states }. Each error is
+ * { code, key, requirement, message, params }: `code` is the stable code the
+ * server's check also reports, `key` the file the error is about and
+ * `requirement` the requirement's id (both null when not about one),
+ * `message` a catalogue key whose English text is the key itself, and
  * `params` fills its {{placeholders}}. A `count` param selects the plural form.
- * Render errors with errorText(). The English texts must match rules.py; the
- * shared cases in tests/cases/rules.json check that.
+ * `counts` and `states` are keyed by requirement id; see requirementState().
+ * Render errors with errorText(). The codes and English texts must match
+ * rules.py; the shared cases in tests/cases/rules.json check that.
  */
 export function checkDeposit(configuration, metadata, fileKeys) {
   const errors = [];
   const counts = {};
-  const add = (key, message, params = {}) => errors.push({ key, message, params });
-  if (!configuration.profiles.length) return { errors, counts };
+  const states = {};
+  const add = (code, key, message, params = {}, requirement = null) =>
+    errors.push({ code, key, requirement, message, params });
+  if (!configuration.profiles.length) return { errors, counts, states };
 
   const selected = metadata?.pgd_deposition_profile ?? {};
   const profile = configuration.profiles.find((item) => item.id === selected.id);
   if (!profile) {
-    add(null, "Select a deposition profile.");
-    return { errors, counts };
+    add("profile_missing", null, "Select a deposition profile.");
+    return { errors, counts, states };
   }
   const name = profile.dataset_category;
   if (selected.revision !== profile.revision) {
-    add(null, "{{profile}}: the profile has changed since it was selected. Select it again and review the file meanings.", { profile: name });
+    add("profile_changed", null, "{{profile}}: the profile has changed since it was selected. Select it again and review the file meanings.", { profile: name });
   }
 
   const types = new Map(configuration.semantic_types.map((item) => [item.id, item]));
@@ -100,7 +105,7 @@ export function checkDeposit(configuration, metadata, fileKeys) {
     const key = annotation.file_key;
     // An annotation of a file that is not there is ignored, as on the server.
     if (!inventory.has(key)) continue;
-    if (annotations.has(key)) add(key, "the file is annotated more than once. Keep one annotation.");
+    if (annotations.has(key)) add("annotation_repeated", key, "the file is annotated more than once. Keep one annotation.");
     else annotations.set(key, annotation);
   }
 
@@ -108,22 +113,22 @@ export function checkDeposit(configuration, metadata, fileKeys) {
     const annotation = annotations.get(key) ?? {};
     const assigned = annotation.semantic_types ?? [];
     if (!assigned.length) {
-      add(key, "select at least one file meaning.");
+      add("meaning_missing", key, "select at least one file meaning.");
       continue;
     }
-    if (new Set(assigned).size < assigned.length) add(key, "remove the repeated file meaning.");
+    if (new Set(assigned).size < assigned.length) add("meaning_repeated", key, "remove the repeated file meaning.");
     for (const typeId of new Set(assigned)) {
       const label = types.get(typeId)?.label ?? typeId;
       if (!permitted.has(typeId)) {
-        add(key, "{{label}} is not a file meaning in the {{profile}} profile.", { label, profile: name });
+        add("meaning_not_in_profile", key, "{{label}} is not a file meaning in the {{profile}} profile.", { label, profile: name });
         continue;
       }
       const formats = permitted.get(typeId).formats;
       if (formats?.length && !formats.some((suffix) => key.toLowerCase().endsWith(`.${suffix.toLowerCase()}`))) {
-        add(key, "{{label}} accepts {{formats}} files.", { label, formats: formats.join(", ") });
+        add("format_not_accepted", key, "{{label}} accepts {{formats}} files.", { label, formats: formats.join(", ") });
       }
       if (types.get(typeId)?.requires_description && !(annotation.description ?? "").trim()) {
-        add(key, "{{label}} needs a description of what the file is.", { label });
+        add("description_missing", key, "{{label}} needs a description of what the file is.", { label });
       }
     }
   }
@@ -134,16 +139,19 @@ export function checkDeposit(configuration, metadata, fileKeys) {
       (annotation.semantic_types ?? []).some((id) => matching.has(id)),
     ).length;
     counts[requirement.id] = found;
+    states[requirement.id] = requirementState(requirement, found);
     const { label, min_files: minimum, max_files: maximum } = requirement;
     if (requirement.level === "required" && found < minimum) {
       // The help text is repository content, appended as written.
-      add(null, "{{label}}: {{found}} of at least {{count}} file.", { label, found, count: minimum, help: requirement.help });
+      add("too_few_files", null, "{{label}}: {{found}} of at least {{count}} file.",
+        { label, found, count: minimum, help: requirement.help }, requirement.id);
     }
     if (maximum != null && found > maximum) {
-      add(null, "{{label}}: {{found}} of at most {{count}} file. Remove or reassign the extra files.", { label, found, count: maximum });
+      add("too_many_files", null, "{{label}}: {{found}} of at most {{count}} file. Remove or reassign the extra files.",
+        { label, found, count: maximum }, requirement.id);
     }
   }
-  return { errors, counts };
+  return { errors, counts, states };
 }
 
 /**

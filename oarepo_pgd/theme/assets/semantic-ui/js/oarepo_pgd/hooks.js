@@ -26,6 +26,6 @@ export function useDepositionCheck(record) {
 
   const metadata = values.metadata ?? {};
   const filesEnabled = values.files?.enabled ?? true;
-  const result = configuration ? checkDeposit(configuration, metadata, keys) : { errors: [], counts: {} };
+  const result = configuration ? checkDeposit(configuration, metadata, keys) : { errors: [], counts: {}, states: {} };
   return { configuration, metadata, filesEnabled, present, keys, result };
 }
