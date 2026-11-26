@@ -100,11 +100,16 @@ A CESNET Invenio repository on `oarepo-app` 8 (OARepo 14.2, InvenioRDM 14), gene
 
 6. Run `./run.sh install`. It installs the package and rebuilds the frontend with the plugin's components.
 
-   If the repository's services are already set up, its search index also needs the plugin's two metadata fields; until it has them, saving a draft with a profile fails. `./run.sh index rebuild` deletes the search indices, creates them again and queues every record for indexing. Search results are missing or incomplete until the workers have indexed all records, so plan the rebuild for a quiet time. Restart the web and worker processes first, so they run the installed plugin, and keep the workers running until the indexing has finished:
+   If the repository's services are already set up, its search index also needs the plugin's two metadata fields; until it has them, saving a draft with a profile fails. `./run.sh index rebuild` deletes the search indices, creates them again and queues every record for indexing. Search results are missing or incomplete until the workers have indexed all records, so plan the rebuild for a quiet time.
+
+   Stop the web and worker processes, rebuild the index, then start them again; they now run the installed plugin, and the workers index all records:
 
    ```sh
    ./run.sh index rebuild
+   ./run.sh run
    ```
+
+   Workers that run during the rebuild can write a record between deleting the indices and creating them again. The rebuild then fails with `invalid_alias_name_exception`; stop the workers and run it again.
 
 That is all for a repository with the standard deposit form. A new repository then continues with `./run.sh services setup` as usual.
 
