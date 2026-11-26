@@ -49,7 +49,7 @@ packages = ["oarepo_pgd"]
 
 # Only the release files: local tool folders may be ignored outside this repository's .gitignore.
 [tool.hatch.build.targets.sdist]
-include = ["oarepo_pgd", "tests", "README.md", "LICENSE", "pyproject.toml"]
+include = ["oarepo_pgd", "tests", "docs", "README.md", "LICENSE", "pyproject.toml"]
 
 [tool.ruff]
 line-length = 120
